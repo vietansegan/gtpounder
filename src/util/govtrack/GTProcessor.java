@@ -80,6 +80,8 @@ public class GTProcessor {
     }
     
     public HashMap<Integer, String> loadPolicyAgendaCodebook(String filepath) throws Exception {
+        System.out.println("\nLoading Policy Agenda Codebook from " + filepath);
+        
         policyAgendaCodebook = new HashMap<Integer, String>();
         BufferedReader reader = IOUtils.getBufferedReader(filepath);
         String line;
@@ -90,14 +92,20 @@ public class GTProcessor {
             policyAgendaCodebook.put(topicId, topicLabel);
         }
         reader.close();
+        
+        System.out.println("--- Codebook size: " + policyAgendaCodebook.size());
         return policyAgendaCodebook;
     }
     
     public void loadCongressinalBillsProjectTopicLabels(String filepath) throws Exception {
+        System.out.println("\nLoading topic labels from Congressional Bills Project "
+                + filepath);
+        
         BufferedReader reader = IOUtils.getBufferedReader(filepath);
         String line;
         reader.readLine();
         
+        int numBillsLabeled = 0;
         while ((line = reader.readLine()) != null) {
             String[] sline = line.split("\\|");
             int congressNo = Integer.parseInt(sline[7]);
@@ -121,9 +129,12 @@ public class GTProcessor {
             if (bill != null) {
                 bill.addProperty("major", Integer.toString(major));
                 bill.addProperty("minor", Integer.toString(minor));
+                numBillsLabeled ++;
             }
         }
         reader.close();
+        
+        System.out.println("--- # bills labeled: " + numBillsLabeled);
     }
     
     public void processLegislators() throws Exception {
@@ -839,6 +850,7 @@ public class GTProcessor {
             }
             roll.setBillId(billId);
             roll.setTitle(bill.getOfficialTitle());
+            bill.addRollId(roll.getId());
 
             // roll category
             nodelist = docEle.getElementsByTagName("category");
@@ -1017,7 +1029,7 @@ public class GTProcessor {
     }
     
     public ArrayList<GTDebate> selectDebates() throws Exception {
-        System.out.println("Selecting debates ...");
+        System.out.println("\nSelecting debates ...");
         
         int count = 0;
         int hcount = 0;
@@ -1027,6 +1039,11 @@ public class GTProcessor {
         // debates about the same bill.
         HashMap<String, ArrayList<GTDebate>> groupedDebateByBill = new HashMap<String, ArrayList<GTDebate>>();
         
+        // debug
+        System.out.println("# debates: " + this.debates.size());
+        System.out.println("# bills: " + this.bills.size());
+        System.out.println("# rolls: " + this.rolls.size());
+        
         for (GTDebate debate : this.debates.values()) {
             // bill associated with this debate. A debate can be about more
             // than one bill. If there is no bill associated with this debate,
@@ -1035,6 +1052,12 @@ public class GTProcessor {
             // the bill appeared first in the debate. (This is to follow the 
             // way convote did).
             String billId = debate.getBillAssociatedWith();
+            
+            // debug
+//            System.out.println(debate.getId()
+//                    + ". " + billId
+//                    + ". " + (billId == null));
+            
             if (billId == null) { // skip debate that has no bill associated with
                 continue;
             }

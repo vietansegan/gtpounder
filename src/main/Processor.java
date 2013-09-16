@@ -85,7 +85,6 @@ public class Processor {
         proc.processDebates();
         proc.processBills();
         proc.processRolls();
-
         proc.processLegislators();
         String addinfoFolder = CLIUtils.getStringArgument(cmd, "addinfo-folder", "L:/Dropbox/DynamicHierarchicalModel/data/convote/addinfo");
         File senFile = new File(addinfoFolder, SENATOR_FILE);
@@ -94,7 +93,6 @@ public class Processor {
 
         proc.getMissingICPSRIDs(repFile.getAbsolutePath(), senFile.getAbsolutePath());
         proc.getNOMINATEScores(nominateFile.getAbsolutePath());
-        proc.outputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
 
         File policyAgendaCodebookFile = new File(addinfoFolder, POLICY_AGENDA_CODEBOOK_FILE);
         proc.loadPolicyAgendaCodebook(policyAgendaCodebookFile.getAbsolutePath());
@@ -103,8 +101,7 @@ public class Processor {
         proc.loadCongressinalBillsProjectTopicLabels(congressionalBillsProjectTopicFile.getAbsolutePath());
 
         ArrayList<GTDebate> selectedDebates = proc.selectDebates();
-        proc.outputSelectedDebate(new File(processedFolder, "filter").getAbsolutePath(), selectedDebates);
-
+        
         proc.outputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
         proc.outputSelectedDebate(new File(processedFolder, "filter").getAbsolutePath(), selectedDebates);
         proc.outputBills(new File(processedFolder, "bills.txt").getAbsolutePath());
