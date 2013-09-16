@@ -15,14 +15,12 @@ public class GTDebate extends AbstractObject {
     private String title;
     private ArrayList<GTTurn> turns;
     private ArrayList<String> billsMentioned; // list of bill IDs mentioned
-//    private Set<String> billsDiscussed;
     private GTRoll associatedRoll;
 
     public GTDebate(String id) {
         super(id);
         this.turns = new ArrayList<GTTurn>();
         this.billsMentioned = new ArrayList<String>();
-//        this.billsDiscussed = new HashSet<String>();
     }
 
     /**
@@ -75,13 +73,6 @@ public class GTDebate extends AbstractObject {
         this.associatedRoll = roll;
     }
 
-//    public void addBillDiscussed(String billId) {
-//        this.billsDiscussed.add(billId);
-//    }
-//
-//    public Set<String> getBillsDiscussed() {
-//        return this.billsDiscussed;
-//    }
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
