@@ -33,7 +33,7 @@ public class GTDownloader {
 
     public void downloadBills() throws Exception {
         System.out.println("Downloading files from " + GOVTRACK_URL + congressNumber + "/bills/");
-
+        
         ArrayList<String> urls = getUrls(GOVTRACK_URL + congressNumber + "/" + "bills/");
         int count = 0;
         for (String urlFile : urls) {
@@ -69,63 +69,6 @@ public class GTDownloader {
             count++;
         }
         System.out.println("--- " + count + " files downloaded");
-    }
-
-    public void downloadIndexCrBill() throws Exception {
-        System.out.println("Downloading files from " + GOVTRACK_URL + congressNumber + "/" + "index.cr.bill/");
-
-        ArrayList<String> urls = getUrls(GOVTRACK_URL + congressNumber + "/" + "index.cr.bill/");
-        int count = 0;
-        for (String urlFile : urls) {
-            if (!urlFile.contains(".xml")) {
-                continue;
-            }
-
-            System.out.println("--- Downloading file " + urlFile
-                    + ". " + MiscUtils.formatDouble(100 * (double) count / urls.size()));
-            URL url = new URL(GOVTRACK_URL + congressNumber + "/index.cr.bill/" + urlFile);
-            File outFile = new File(new File(this.congressFolder, "index.cr.bill"), urlFile);
-            FileUtils.copyURLToFile(url, outFile);
-            count++;
-        }
-        System.out.println("--- " + count + " files downloaded");
-    }
-
-    public void downloadIndexCrPerson() throws Exception {
-        System.out.println("Downloading files from " + GOVTRACK_URL + congressNumber + "/" + "index.cr.person/");
-
-        ArrayList<String> urls = getUrls(GOVTRACK_URL + congressNumber + "/" + "index.cr.person/");
-        int count = 0;
-        for (String urlFile : urls) {
-            if (!urlFile.contains(".xml")) {
-                continue;
-            }
-
-            URL url = new URL(GOVTRACK_URL + congressNumber + "/index.cr.person/" + urlFile);
-            File outFile = new File(new File(this.congressFolder, "index.cr.person"), urlFile);
-            FileUtils.copyURLToFile(url, outFile);
-            count++;
-        }
-        System.out.println("--- " + count + " files downloaded");
-    }
-
-    public void downloadBillsIndex() throws Exception {
-        URL url = new URL(this.congressURL, "bills.index.xml");
-        File outFile = new File(this.congressFolder, "bills.index.xml");
-
-        System.out.println("Downloading file " + url + " to " + outFile);
-        FileUtils.copyURLToFile(url, outFile);
-    }
-
-    /**
-     * Download votes.all.index.xml file that contains all the votes.
-     */
-    public void downloadVoteAllIndex() throws Exception {
-        URL url = new URL(this.congressURL, "votes.all.index.xml");
-        File outFile = new File(this.congressFolder, "votes.all.index.xml");
-
-        System.out.println("Downloading file " + url + " to " + outFile);
-        FileUtils.copyURLToFile(url, outFile);
     }
 
     public void downloadPeopleXML() throws Exception {

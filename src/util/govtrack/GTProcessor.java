@@ -770,164 +770,7 @@ public class GTProcessor {
         
         System.out.println("--- Loaded " + this.bills.size() + " bills.");
     }
-
-    /**
-     * Load all bills from bills.index.xml. For each bill, load all its
-     * associated debate ids from folder index.cr.bill/
-     */
-//    public void processBillsOld() throws Exception {
-//        File voteIndexFile = new File(this.congressFolder, "bills.index.xml");
-//        System.out.println("\nProcessing bills " + voteIndexFile.getAbsolutePath() + " ...");
-//        
-//        this.bills = new HashMap<String, GTBill>();
-//        Element docEle = getDocumentElement(voteIndexFile.getAbsolutePath());
-//        NodeList nodelist;
-//        Element element;
-//        
-//        nodelist = docEle.getElementsByTagName("bill");
-//        for (int i = 0; i < nodelist.getLength(); i++) {
-//            element = (Element) nodelist.item(i);
-//            String type = element.getAttribute("type");
-//            int number = Integer.parseInt(element.getAttribute("number"));
-//            String title = element.getAttribute("title");
-//            String officialTitle = element.getAttribute("official-title");
-//            
-//            GTBill bill = new GTBill(type, number);
-//            bill.setTitle(title);
-//            bill.setOfficialTitle(officialTitle);
-//            
-//            this.bills.put(bill.getId(), bill);
-//        }
-//        System.out.println("--- Loaded " + bills.size() + " bills");
-//
-//        // store the list of debates that discuss each bill
-//        for (GTDebate debate : this.debates.values()) {
-//            String debateId = debate.getId();
-//            
-//            Set<String> billsMentionedSet = new HashSet<String>();
-//            for (String billId : debate.getBillsMentioned()) {
-//                billsMentionedSet.add(billId);
-//            }
-//            
-//            for (String billId : billsMentionedSet) {
-//                GTBill bill = this.bills.get(billId);
-//                if (bill == null) {
-//                    continue;
-//                }
-//                bill.addDebateId(debateId);
-//            }
-//        }
-//    }
-    // to be removed
-//    public void processBillSubjects() throws Exception {
-//        System.out.println("\nProcessing bill subjects ...");
-//        
-//        int count = 0;
-//        for (String billId : bills.keySet()) {
-//            GTBill bill = bills.get(billId);
-//            ArrayList<String> subjects = getBillSubjects(billId.replaceAll("-", ""));
-//            if (subjects.isEmpty()) {
-//                System.out.println("Empty-subject bill: " + billId);
-//                count++;
-//                continue;
-//            }
-//            bill.setSubjects(subjects);
-//        }
-//        
-//        System.out.println("Number of bills with empty subject: " + count);
-//        System.out.println("Total number of bills: " + bills.size());
-//    }
-    // to be removed
-//    private ArrayList<String> getBillSubjects(String billId) throws Exception {
-//        File billFolder = new File(this.congressFolder, "bills");
-//        if (!billFolder.exists()) {
-//            throw new RuntimeException(billFolder + " not found.");
-//        }
-//        
-//        File billFile = new File(billFolder, billId + ".xml");
-//        if (!billFile.exists()) {
-//            throw new RuntimeException(billFile + " not found.");
-//        }
-//        
-//        ArrayList<String> subjects = new ArrayList<String>();
-//        Element docEle = getDocumentElement(billFile.getAbsolutePath());
-//        NodeList nodelist;
-//        Element element;
-//        
-//        nodelist = docEle.getElementsByTagName("term");
-//        for (int i = 0; i < nodelist.getLength(); i++) {
-//            element = (Element) nodelist.item(i);
-//            subjects.add(element.getAttribute("name"));
-//        }
-//        return subjects;
-//    }
-//    public void processRolls() throws Exception {
-//        File voteIndexFile = new File(this.congressFolder, "votes.all.index.xml");
-//        if (!voteIndexFile.exists()) {
-//            throw new RuntimeException(voteIndexFile.getAbsolutePath() + " not found.");
-//        }
-//        System.out.println("\nProcessing votes " + voteIndexFile + " ...");
-//
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
-//
-//        this.rolls = new HashMap<String, GTRoll>();
-//        Element docEle = getDocumentElement(voteIndexFile.getAbsolutePath());
-//        NodeList nodelist;
-//        Element element;
-//
-//        nodelist = docEle.getElementsByTagName("vote");
-//        System.out.println("--- Total vote tags in votes.all.index.xml = " + nodelist.getLength());
-//        int count = 0;
-//        for (int i = 0; i < nodelist.getLength(); i++) {
-//            element = (Element) nodelist.item(i);
-//            String id = element.getAttribute("id");
-//            String where = element.getAttribute("where");
-//            int rollNumber = Integer.parseInt(element.getAttribute("roll"));
-//            String title = element.getAttribute("title");
-//            String billId = element.getAttribute("bill");
-//
-//            long date;
-//            if (element.hasAttribute("date")) {
-//                date = Long.parseLong(element.getAttribute("date"));
-//            } else if (element.hasAttribute("datetime")) {
-//                String datetime = element.getAttribute("datetime").replaceAll("T", " ");
-//                int lastHyphenIndex = datetime.lastIndexOf("-");
-//                datetime = datetime.substring(0, lastHyphenIndex);
-//                long timeInMillisSinceEpoch = sdf.parse(datetime).getTime();
-//                date = TimeUnit.MILLISECONDS.toMinutes(timeInMillisSinceEpoch);
-//            } else {
-//                throw new RuntimeException("No date provided");
-//            }
-//
-//            GTRoll roll = new GTRoll(id);
-//            roll.setWhere(where);
-//            roll.setRoll(rollNumber);
-//            roll.setTitle(title);
-//            roll.setDate(date);
-//
-//            String[] sbill = billId.split("-");
-//            if (sbill.length != 2) { // skipping non-bill votes
-//                count++;
-//                continue;
-//            }
-//
-//            billId = sbill[0].replace(Integer.toString(congressNumber), "") + "-" + sbill[1];
-//            GTBill bill = this.bills.get(billId);
-//            if (bill == null) {
-//                throw new RuntimeException("Bill not found. Skipping. "
-//                        + "Vote id = " + id
-//                        + ". Bill id = " + billId);
-////                continue;
-//            }
-//
-//            roll.setBillId(billId);
-//            this.getVotes(roll);
-//            bill.addRollId(roll.getId());
-//            this.rolls.put(id, roll);
-//        }
-//        System.out.println("--- Loaded " + rolls.size() + " votes");
-//        System.out.println("--- Skipped " + count + " non-bill votes");
-//    }
+    
     public void processRolls() {
         File rollFolder = new File(this.congressFolder, "rolls");
         if (!rollFolder.exists()) {
@@ -1022,36 +865,7 @@ public class GTProcessor {
         
         System.out.println("--- Loaded " + rolls.size() + " votes");
     }
-
-//    public void getVotes(GTRoll roll) throws Exception {
-//        File rollFolder = new File(this.congressFolder, "rolls");
-//        if (!rollFolder.exists()) {
-//            throw new RuntimeException(rollFolder + " not found");
-//        }
-//
-//        File rollFile = new File(rollFolder, roll.getId() + ".xml");
-//        if (!rollFile.exists()) {
-//            throw new RuntimeException(rollFile + " not found ");
-//        }
-//        Element docEle = getDocumentElement(rollFile.getAbsolutePath());
-//        NodeList nodelist = docEle.getElementsByTagName("category");
-//        Element element = (Element) nodelist.item(0);
-//        String category = element.getFirstChild().getNodeValue();
-//        roll.addProperty("category", category);
-//
-//        nodelist = docEle.getElementsByTagName("result");
-//        element = (Element) nodelist.item(0);
-//        String result = element.getFirstChild().getNodeValue();
-//        roll.addProperty("result", result);
-//
-//        nodelist = docEle.getElementsByTagName("voter");
-//        for (int i = 0; i < nodelist.getLength(); i++) {
-//            Element el = (Element) nodelist.item(i);
-//            String pid = el.getAttribute("id");
-//            String v = el.getAttribute("vote");
-//            roll.putVote(pid, v);
-//        }
-//    }
+    
     /**
      * Get the main vote associated with a given bill. This vote is selected as
      * follow 1. If the bill contains a vote having result as "Bill Passed",
@@ -1321,21 +1135,23 @@ public class GTProcessor {
     
     public void outputSelectedDebate(String outputFolderpath, ArrayList<GTDebate> selectedDebates) throws Exception {
         System.out.println("Outputing selected debates to folder " + outputFolderpath);
-        IOUtils.createFolder(outputFolderpath);
+        File debateFolder = new File(outputFolderpath);
+        File debateInfoFolder = new File(debateFolder.getAbsolutePath() + "_info");
+        
+        IOUtils.createFolder(debateFolder);
+        IOUtils.createFolder(debateInfoFolder);
+        
         BufferedWriter writer;
         for (GTDebate debate : selectedDebates) {
             // output debate texts
-            writer = IOUtils.getBufferedWriter(new File(outputFolderpath, debate.getId() + ".txt"));
+            writer = IOUtils.getBufferedWriter(new File(debateFolder, debate.getId() + ".txt"));
             for (GTTurn turn : debate.getTurns()) {
                 writer.write(turn.getSpeakerId() + ":\t" + turn.getText() + "\n");
             }
             writer.close();
 
             // output debate info
-            writer = IOUtils.getBufferedWriter(new File(outputFolderpath, debate.getId() + ".info"));
-//            GTBill bill = this.bills.get(billId);
-//            writer.write(bill.getType() + "\t" + bill.getNumber() + "\t" + bill.getTitle() + "\n");
-
+            writer = IOUtils.getBufferedWriter(new File(debateInfoFolder, debate.getId() + ".info"));
             GTRoll roll = debate.getAssociatedRoll();
             writer.write(roll.getId()
                     + "\t" + roll.getWhere()
@@ -1348,24 +1164,7 @@ public class GTProcessor {
             for (String pid : roll.getVotes().keySet()) {
                 writer.write(pid + "\t" + roll.getVote(pid) + "\n");
             }
-            
             writer.close();
-        }
-    }
-    
-    public void debug2() throws Exception {
-        System.out.println("Debugging 2 ...");
-        
-        int count = 0;
-        for (GTDebate debate : this.debates.values()) {
-            System.out.println("Debate: " + debate.getId());
-            System.out.println("Bills mentioned " + debate.getBillsMentioned().toString());
-            System.out.println();
-            
-            if (count == 50) {
-                break;
-            }
-            count++;
         }
     }
     
@@ -1449,6 +1248,7 @@ public class GTProcessor {
         Element docEle = dom.getDocumentElement(); //get the root element
         return docEle;
     }
+    
     private static String[] stateMaps = {
         "41 AL ALABAMA",
         "81 AK ALASKA",
