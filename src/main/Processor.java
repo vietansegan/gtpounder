@@ -8,6 +8,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import util.CLIUtils;
+import util.IOUtils;
 import util.govtrack.GTDebate;
 import util.govtrack.GTProcessor;
 
@@ -77,7 +78,8 @@ public class Processor {
         String folder = CLIUtils.getStringArgument(cmd, "folder", "L:/Dropbox/Datasets/govtrack/");
         int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 109);
         String processedFolder = CLIUtils.getStringArgument(cmd, "processed-folder", "L:/Dropbox/Datasets/govtrack/109/processed");
-
+        IOUtils.createFolder(processedFolder);
+        
         GTProcessor proc = new GTProcessor(folder, congressNo);
 
         proc.processDebates();
