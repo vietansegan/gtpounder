@@ -33,7 +33,7 @@ public class GTDownloader {
 
     public void downloadBills() throws Exception {
         System.out.println("Downloading files from " + GOVTRACK_URL + congressNumber + "/bills/");
-        
+
         ArrayList<String> urls = getUrls(GOVTRACK_URL + congressNumber + "/" + "bills/");
         int count = 0;
         for (String urlFile : urls) {
