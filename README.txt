@@ -1,3 +1,13 @@
+=== To compile ===
+    ant jar
+
+Note: to compile, there should be a "lib" folder containing the following library files
+      - commons-cli-1.2.jar
+      - commons-io-2.4.jar
+      - commons-lang3-3.1.jar
+      - commons-math3-3.1-SNAPSHOT.jar
+      - opennlp-tools-1.5.1-incubating.jar
+
 === To download data from a Congress ===
 
    java -cp 'dist/gtpounder.jar:dist/lib/*' main.Downloader --folder <download_folder> --congress <congress_number>
