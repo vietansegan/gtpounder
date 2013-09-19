@@ -33,6 +33,8 @@ public class Processor {
     private static Options options;
     private static CommandLine cmd;
     private static boolean verbose;
+    public static final String DEBATE_FOLDER = "debates"; // each turn as a document
+    public static final String BILL_FOLDER = "bills"; // each bill summary as a document
 
     public static void main(String[] args) {
         try {
@@ -92,8 +94,10 @@ public class Processor {
 
             if (mode.equals("process")) {
                 process();
-            } else if (mode.equals("format")) {
-                format();
+            } else if (mode.equals("format-debate-turns")) {
+                formatDebateTurns();
+            } else if (mode.equals("format-bill-summaries")) {
+                formatBillSummaries();
             } else if (mode.equals("extract-republicans")) {
                 extractRepublicans();
             } else {
@@ -147,15 +151,25 @@ public class Processor {
         ArrayList<GTDebate> selectedDebates = proc.selectDebates();
 
         // output
+        File debateFolder = new File(processedFolder, DEBATE_FOLDER);
+        File billFolder = new File(processedFolder, BILL_FOLDER);
+
+        // - output legislators
         proc.outputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
-        proc.outputSelectedDebate(new File(processedFolder, "filter").getAbsolutePath(), selectedDebates);
-        proc.outputBills(new File(processedFolder, "bills.txt").getAbsolutePath());
-        proc.outputBillSubjects(new File(processedFolder, "bills-subjects.txt").getAbsolutePath());
+
+        // - output debates (texts and info)
+        proc.outputSelectedDebateTurns(debateFolder.getAbsolutePath(), selectedDebates);
+
+        // - output bills (info, summary and subjects)
+        IOUtils.createFolder(billFolder);
+        proc.outputBills(new File(billFolder, "info.txt"));
+        proc.outputBillSubjects(new File(billFolder, "subjects.txt"));
+        proc.outputBillSummaries(new File(billFolder, "summaries"));
     }
 
-    private static void format() throws Exception {
+    private static void formatDebateTurns() throws Exception {
         if (verbose) {
-            System.out.println("Formatting documents with NOMINATE reponses and labels ...");
+            System.out.println("Formatting turns with NOMINATE reponses and labels ...");
         }
 
         String folder = cmd.getOptionValue("folder");
@@ -166,17 +180,18 @@ public class Processor {
 
         GTProcessor proc = new GTProcessor(folder, congressNo);
         proc.setVerbose(verbose);
-        
+
+        // load legislators
         HashMap<String, GTLegislator> legislators = proc.inputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
-        ArrayList<GTDebate> debates = proc.inputDebates(new File(processedFolder, "filter").getAbsolutePath());
-        HashMap<String, GTBill> bills = proc.inputBills(new File(processedFolder, "bills.txt").getAbsolutePath());
+
+        // load debates
+        File debateFolder = new File(processedFolder, DEBATE_FOLDER);
+        ArrayList<GTDebate> debates = proc.inputDebates(debateFolder);
 
         ArrayList<String> docIds = new ArrayList<String>();
         ArrayList<String> docTexts = new ArrayList<String>();
         ArrayList<Double> docResponses = new ArrayList<Double>();
-        ArrayList<ArrayList<String>> docLabels = new ArrayList<ArrayList<String>>();
         ArrayList<String> docInfo = new ArrayList<String>();
-
         for (GTDebate debate : debates) {
             int turnCount = -1;
             for (GTTurn turn : debate.getTurns()) {
@@ -210,9 +225,6 @@ public class Processor {
                         + legislator.getProperty(GTProcessor.NOMINATE_SCORE1) + "\t"
                         + roll.getBillId() + "\t"
                         + roll.getTitle());
-
-                GTBill bill = bills.get(roll.getBillId());
-                docLabels.add(bill.getSubjects());
             }
         }
 
@@ -237,17 +249,72 @@ public class Processor {
         }
         writer.close();
 
-        // 3. output labels
-        writer = IOUtils.getBufferedWriter(new File(outputFolder, "labels.txt"));
-        for (int ii = 0; ii < docIds.size(); ii++) {
-            writer.write(docIds.get(ii) + "\t" + docLabels.get(ii).toString() + "\n");
-        }
-        writer.close();
-
-        // 4. output info
+        // 3. output info
         writer = IOUtils.getBufferedWriter(new File(outputFolder, "info.txt"));
         for (int ii = 0; ii < docIds.size(); ii++) {
             writer.write(docIds.get(ii) + "\t" + docInfo.get(ii) + "\n");
+        }
+        writer.close();
+    }
+
+    private static void formatBillSummaries() throws Exception {
+        if (verbose) {
+            System.out.println("Formatting bill summaries ...");
+        }
+
+        String folder = cmd.getOptionValue("folder");
+        String processedFolder = cmd.getOptionValue("processed-folder");
+        int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 109); // default
+        String outputFolder = cmd.getOptionValue("format-folder");
+        IOUtils.createFolder(outputFolder);
+
+        GTProcessor proc = new GTProcessor(folder, congressNo);
+        proc.setVerbose(verbose);
+
+        // load legislators
+//        HashMap<String, GTLegislator> legislators = proc.inputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
+
+        // load debates
+//        File debateFolder = new File(processedFolder, DEBATE_FOLDER);
+//        ArrayList<GTDebate> debates = proc.inputDebates(debateFolder);
+
+        // load bills
+        File billFolder = new File(processedFolder, BILL_FOLDER);
+        HashMap<String, GTBill> bills = proc.inputBills(new File(billFolder, "info.txt"));
+        proc.inputBillSubjects(new File(billFolder, "subjects.txt"), bills);
+        proc.inputBillSummaries(new File(billFolder, "summaries"), bills);
+
+        // output
+        BufferedWriter writer;
+
+        if (verbose) {
+            System.out.println("\nOutputing to " + outputFolder);
+        }
+        // output bill summaries
+        File textFolder = new File(outputFolder, "texts");
+        IOUtils.createFolder(textFolder);
+        for (String billId : bills.keySet()) {
+            GTBill bill = bills.get(billId);
+
+            String summary = bill.getSummary();
+            int firstPunct = summary.indexOf(".");
+
+            writer = IOUtils.getBufferedWriter(new File(textFolder, billId + ".txt"));
+            writer.write(bill.getOfficialTitle()
+                    + " " + summary.substring(firstPunct + 1).trim());
+            writer.close();
+        }
+
+        // output bill subjects
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "labels.txt"));
+        for (String billId : bills.keySet()) {
+            GTBill bill = bills.get(billId);
+            writer.write(bill.getId());
+            ArrayList<String> billSubjects = bill.getSubjects();
+            for (String bs : billSubjects) {
+                writer.write("\t" + bs);
+            }
+            writer.write("\n");
         }
         writer.close();
     }

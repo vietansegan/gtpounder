@@ -457,27 +457,45 @@ public class GTProcessor {
         }
     }
 
-    public void outputBillSummaries(String folderpath) throws Exception {
+    public void outputBillSummaries(File folder) throws Exception {
         if (verbose) {
-            System.out.println("\nOutputing bill summaries " + folderpath);
+            System.out.println("\nOutputing bill summaries " + folder);
         }
 
         BufferedWriter writer;
-        IOUtils.createFolder(folderpath);
+        IOUtils.createFolder(folder);
         for (GTBill bill : this.bills.values()) {
-            File billSumFile = new File(folderpath, bill.getId());
+            File billSumFile = new File(folder, bill.getId());
             writer = IOUtils.getBufferedWriter(billSumFile);
             writer.write(bill.getSummary());
             writer.close();
         }
     }
+    
+    public void inputBillSummaries(File folder, HashMap<String, GTBill> billMap) throws Exception {
+        if(verbose)
+            System.out.println("\nInputing bill summaries " + folder);
+        
+        BufferedReader reader;
+        String line;
+        for(String billId : billMap.keySet()) {
+            StringBuilder str = new StringBuilder();
+            reader = IOUtils.getBufferedReader(new File(folder, billId));
+            while((line = reader.readLine()) != null){
+                str.append(" ").append(line);
+            }
+            reader.close();
+            
+            billMap.get(billId).setSummary(str.toString());
+        }
+    }
 
-    public void outputBillSubjects(String filepath) throws Exception {
+    public void outputBillSubjects(File file) throws Exception {
         if (verbose) {
-            System.out.println("\nOutputing bill subjects " + filepath);
+            System.out.println("\nOutputing bill subjects " + file);
         }
 
-        BufferedWriter writer = IOUtils.getBufferedWriter(filepath);
+        BufferedWriter writer = IOUtils.getBufferedWriter(file);
         for (GTBill bill : this.bills.values()) {
             writer.write(bill.getId() + "\t");
             for (String subject : bill.getSubjects()) {
@@ -488,12 +506,12 @@ public class GTProcessor {
         writer.close();
     }
 
-    public void inputBillSubjects(String filepath, HashMap<String, GTBill> billMap) throws Exception {
+    public void inputBillSubjects(File file, HashMap<String, GTBill> billMap) throws Exception {
         if (verbose) {
-            System.out.println("\nInputing bill subjects " + filepath);
+            System.out.println("\nInputing bill subjects " + file);
         }
 
-        BufferedReader reader = IOUtils.getBufferedReader(filepath);
+        BufferedReader reader = IOUtils.getBufferedReader(file);
         String line;
         while ((line = reader.readLine()) != null) {
             String[] sline = line.split("\t");
@@ -505,12 +523,12 @@ public class GTProcessor {
         reader.close();
     }
 
-    public void outputBills(String filepath) throws Exception {
+    public void outputBills(File file) throws Exception {
         if (verbose) {
-            System.out.println("\nOutputing bills " + filepath);
+            System.out.println("\nOutputing bills " + file);
         }
 
-        BufferedWriter writer = IOUtils.getBufferedWriter(filepath);
+        BufferedWriter writer = IOUtils.getBufferedWriter(file);
         for (String billId : this.bills.keySet()) {
             GTBill bill = this.bills.get(billId);
             writer.write(bill.getType()
@@ -524,13 +542,13 @@ public class GTProcessor {
         writer.close();
     }
 
-    public HashMap<String, GTBill> inputBills(String filepath) throws Exception {
+    public HashMap<String, GTBill> inputBills(File file) throws Exception {
         if (verbose) {
-            System.out.println("\nInputing bills " + filepath);
+            System.out.println("\nInputing bills " + file);
         }
 
         HashMap<String, GTBill> billMap = new HashMap<String, GTBill>();
-        BufferedReader reader = IOUtils.getBufferedReader(filepath);
+        BufferedReader reader = IOUtils.getBufferedReader(file);
         String line;
         String[] sline;
         while ((line = reader.readLine()) != null) {
@@ -1164,21 +1182,21 @@ public class GTProcessor {
         return selectedDebates;
     }
 
-    public void outputSelectedDebate(String outputFolderpath, ArrayList<GTDebate> selectedDebates) throws Exception {
+    public void outputSelectedDebateTurns(String outputFolderpath, ArrayList<GTDebate> selectedDebates) throws Exception {
         if (verbose) {
             System.out.println("\nOutputing selected debates to folder " + outputFolderpath);
         }
 
-        File debateFolder = new File(outputFolderpath);
-        File debateInfoFolder = new File(debateFolder.getAbsolutePath() + "_info");
+        File debateTextFolder = new File(outputFolderpath, "texts");
+        File debateInfoFolder = new File(outputFolderpath, "info");
 
-        IOUtils.createFolder(debateFolder);
+        IOUtils.createFolder(debateTextFolder);
         IOUtils.createFolder(debateInfoFolder);
 
         BufferedWriter writer;
         for (GTDebate debate : selectedDebates) {
             // output debate texts
-            writer = IOUtils.getBufferedWriter(new File(debateFolder, debate.getId() + ".txt"));
+            writer = IOUtils.getBufferedWriter(new File(debateTextFolder, debate.getId() + ".txt"));
             for (GTTurn turn : debate.getTurns()) {
                 writer.write(turn.getSpeakerId() + ":\t" + turn.getText() + "\n");
             }
@@ -1202,19 +1220,22 @@ public class GTProcessor {
         }
     }
 
-    public ArrayList<GTDebate> inputDebates(String inputFolderpath) throws Exception {
-        File debateFolder = new File(inputFolderpath);
-        File debateInfoFolder = new File(debateFolder.getAbsoluteFile() + "_info");
-        if (!debateFolder.exists() || !debateInfoFolder.exists()) {
-            throw new RuntimeException("Exception while loading debates");
+    public ArrayList<GTDebate> inputDebates(File inputFolder) throws Exception {
+        File debateTextFolder = new File(inputFolder, "texts");
+        File debateInfoFolder = new File(inputFolder, "info");
+        if (!debateTextFolder.exists() || !debateInfoFolder.exists()) {
+            throw new RuntimeException("Exception while loading debates. "
+                    + debateTextFolder.getAbsolutePath()
+                    + " and "
+                    + debateInfoFolder.getAbsolutePath());
         }
 
         if (verbose) {
-            System.out.println("\nInputing debates from folder " + inputFolderpath
+            System.out.println("\nInputing debates from folder " + debateTextFolder
                     + " and " + debateInfoFolder);
         }
 
-        String[] filenames = debateFolder.list();
+        String[] filenames = debateTextFolder.list();
         BufferedReader reader;
         String line;
         String[] sline;
@@ -1224,7 +1245,7 @@ public class GTProcessor {
             GTDebate debate = new GTDebate(debateId);
 
             // read in the debate texts
-            reader = IOUtils.getBufferedReader(new File(debateFolder, filename));
+            reader = IOUtils.getBufferedReader(new File(debateTextFolder, filename));
             int count = 0;
             while ((line = reader.readLine()) != null) {
                 sline = line.split(":\t");
