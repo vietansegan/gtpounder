@@ -74,6 +74,12 @@ public class Processor {
                     .withArgName("")
                     .create());
 
+            options.addOption(OptionBuilder.withLongOpt("tea-party-file")
+                    .withDescription("Tea party annotation file")
+                    .hasArg()
+                    .withArgName("")
+                    .create());
+
             options.addOption(OptionBuilder.withLongOpt("mode")
                     .withDescription("Mode of processing")
                     .hasArg()
@@ -100,6 +106,8 @@ public class Processor {
                 formatBillSummaries();
             } else if (mode.equals("extract-republicans")) {
                 extractRepublicans();
+            } else if (mode.equals("format-debate-turns-tea-party")) {
+                formatDebateTurnsWithTeaPartyAnnotations();
             } else {
                 throw new RuntimeException("Processing mode " + mode + " is not supported.");
             }
@@ -144,8 +152,8 @@ public class Processor {
         proc.loadPolicyAgendaCodebook(policyAgendaCodebookFile.getAbsolutePath());
 
         // - load topics labeled by the Congressional Bills project
-        File congressionalBillsProjectTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
-        proc.loadCongressinalBillsProjectTopicLabels(congressionalBillsProjectTopicFile.getAbsolutePath());
+        File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
+        proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
 
         // select a subset of 'interesting' debates, following Thomas et. at. (EMNLP 06)
         ArrayList<GTDebate> selectedDebates = proc.selectDebates();
@@ -167,6 +175,14 @@ public class Processor {
         proc.outputBillSummaries(new File(billFolder, "summaries"));
     }
 
+    /**
+     * Format debate turns
+     *
+     * - Each turn in a debate is a document
+     *
+     * - The response variable associated with each document is the DW-NOMINATE
+     * score of the corresponding speaker
+     */
     private static void formatDebateTurns() throws Exception {
         if (verbose) {
             System.out.println("Formatting turns with NOMINATE reponses and labels ...");
@@ -182,7 +198,8 @@ public class Processor {
         proc.setVerbose(verbose);
 
         // load legislators
-        HashMap<String, GTLegislator> legislators = proc.inputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
+        HashMap<String, GTLegislator> legislators = proc.inputLegislators(
+                new File(processedFolder, "legislators.txt").getAbsolutePath());
 
         // load debates
         File debateFolder = new File(processedFolder, DEBATE_FOLDER);
@@ -257,6 +274,13 @@ public class Processor {
         writer.close();
     }
 
+    /**
+     * Format bill summaries
+     *
+     * - Each bill summary is a document
+     *
+     * - The set of subjects associated with each bill is the label
+     */
     private static void formatBillSummaries() throws Exception {
         if (verbose) {
             System.out.println("Formatting bill summaries ...");
@@ -270,13 +294,6 @@ public class Processor {
 
         GTProcessor proc = new GTProcessor(folder, congressNo);
         proc.setVerbose(verbose);
-
-        // load legislators
-//        HashMap<String, GTLegislator> legislators = proc.inputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
-
-        // load debates
-//        File debateFolder = new File(processedFolder, DEBATE_FOLDER);
-//        ArrayList<GTDebate> debates = proc.inputDebates(debateFolder);
 
         // load bills
         File billFolder = new File(processedFolder, BILL_FOLDER);
@@ -301,7 +318,11 @@ public class Processor {
 
             writer = IOUtils.getBufferedWriter(new File(textFolder, billId + ".txt"));
             writer.write(bill.getOfficialTitle()
-                    + " " + summary.substring(firstPunct + 1).trim());
+                    + " " + summary.substring(firstPunct + 1)
+                    .replaceAll("\\(This measure has not been amended since "
+                    + "it was introduced. The summary of that version is repeated here.\\)", "")
+                    .trim()
+                    + "\n");
             writer.close();
         }
 
@@ -345,6 +366,119 @@ public class Processor {
                         + "\t" + legislator.getType()
                         + "\n");
             }
+        }
+        writer.close();
+    }
+
+    /**
+     * Format data with Tea Party annotations
+     *
+     * - Each turn in a debate is a document
+     *
+     * - Most of Republicans in the House are annotated with Tea Party score
+     *
+     * - The response variable associated with each document is the Tea Party
+     * score of the corresponding speaker
+     */
+    private static void formatDebateTurnsWithTeaPartyAnnotations() throws Exception {
+        String folder = cmd.getOptionValue("folder");
+        String processedFolder = cmd.getOptionValue("processed-folder");
+        int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 109); // default
+        String outputFolder = cmd.getOptionValue("format-folder");
+        String teaPartyAnnotationFile = cmd.getOptionValue("tea-party-file");
+        IOUtils.createFolder(outputFolder);
+
+        GTProcessor proc = new GTProcessor(folder, congressNo);
+        proc.setVerbose(verbose);
+
+        // load legislators
+        HashMap<String, GTLegislator> legislators = proc.inputLegislators(
+                new File(processedFolder, "legislators.txt").getAbsolutePath());
+
+        // load Tea Party annotation for legislators
+        proc.loadTeaPartyAnnotations(teaPartyAnnotationFile);
+
+        // load debates
+        File debateFolder = new File(processedFolder, DEBATE_FOLDER);
+        ArrayList<GTDebate> debates = proc.inputDebates(debateFolder);
+
+        // output
+        ArrayList<String> docIds = new ArrayList<String>();
+        ArrayList<String> docTexts = new ArrayList<String>();
+        ArrayList<Double> docResponses = new ArrayList<Double>();
+        ArrayList<String> docInfo = new ArrayList<String>();
+        for (GTDebate debate : debates) {
+            int turnCount = -1;
+            for (GTTurn turn : debate.getTurns()) {
+                turnCount++;
+
+                String speaker = turn.getSpeakerId();
+                GTLegislator legislator = legislators.get(speaker);
+
+                if (legislator == null) {
+                    continue;
+                }
+                // skipping speakers without NOMINATE score
+                if (!legislator.hasProperty(GTProcessor.NOMINATE_SCORE1)) {
+                    System.out.println(legislator.toString() + " does not have NOMINATE score");
+                    continue;
+                }
+                // skipping speakers without Tea Party annotation
+                if (!legislator.hasProperty(GTLegislator.TP_SCORE)) {
+                    continue;
+                }
+
+                GTRoll roll = debate.getAssociatedRoll();
+
+                String id = debate.getId() + "_" + turnCount;
+                String text = turn.getText();
+                // response variable is the Tea Party score
+                double response = Double.parseDouble(legislator.getProperty(GTLegislator.TP_SCORE));
+
+                docIds.add(id);
+                docTexts.add(text);
+                docResponses.add(response);
+
+                docInfo.add(debate.getId() + "_" + turnCount + "\t"
+                        + speaker + "\t"
+                        + legislator.getParty() + "\t"
+                        + roll.getVote(legislator.getId()) + "\t"
+                        + legislator.getProperty(GTProcessor.NOMINATE_SCORE1) + "\t"
+                        + legislator.getProperty(GTLegislator.FRESHMEN) + "\t"
+                        + legislator.getProperty(GTLegislator.TP_SCORE) + "\t"
+                        + legislator.getProperty(GTLegislator.FW_SCORE) + "\t"
+                        + roll.getBillId() + "\t"
+                        + roll.getTitle());
+            }
+        }
+
+        // output
+        if (verbose) {
+            System.out.println("\nOutputing format data to " + outputFolder + " ...");
+        }
+        BufferedWriter writer;
+        // 1. output main texts
+        File textFolder = new File(outputFolder, "texts");
+        IOUtils.createFolder(textFolder);
+        for (int ii = 0; ii < docIds.size(); ii++) {
+            writer = IOUtils.getBufferedWriter(new File(textFolder, docIds.get(ii) + ".txt"));
+            writer.write(docTexts.get(ii));
+            writer.close();
+        }
+
+        // 2. output responses
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "responses.txt"));
+        for (int ii = 0; ii < docIds.size(); ii++) {
+            writer.write(docIds.get(ii)
+                    + "\t" + docResponses.get(ii)
+                    + "\n");
+        }
+        writer.close();
+
+        // 3. output info
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "info.txt"));
+        for (int ii = 0; ii < docIds.size(); ii++) {
+            writer.write(docIds.get(ii) + "\t" + docInfo.get(ii) + "\n");
         }
         writer.close();
     }

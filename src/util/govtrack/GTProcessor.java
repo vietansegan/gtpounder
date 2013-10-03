@@ -471,21 +471,22 @@ public class GTProcessor {
             writer.close();
         }
     }
-    
+
     public void inputBillSummaries(File folder, HashMap<String, GTBill> billMap) throws Exception {
-        if(verbose)
+        if (verbose) {
             System.out.println("\nInputing bill summaries " + folder);
-        
+        }
+
         BufferedReader reader;
         String line;
-        for(String billId : billMap.keySet()) {
+        for (String billId : billMap.keySet()) {
             StringBuilder str = new StringBuilder();
             reader = IOUtils.getBufferedReader(new File(folder, billId));
-            while((line = reader.readLine()) != null){
+            while ((line = reader.readLine()) != null) {
                 str.append(" ").append(line);
             }
             reader.close();
-            
+
             billMap.get(billId).setSummary(str.toString());
         }
     }
@@ -612,7 +613,7 @@ public class GTProcessor {
         if (verbose) {
             System.out.println("\nInputing legislators from file " + inputFilepath);
         }
-        HashMap<String, GTLegislator> legMap = new HashMap<String, GTLegislator>();
+        this.legislators = new HashMap<String, GTLegislator>();
         BufferedReader reader = IOUtils.getBufferedReader(inputFilepath);
         String line;
         String[] sline;
@@ -630,7 +631,7 @@ public class GTProcessor {
             String firstname = sline[9];
             String middlename = sline[10];
 
-            GTLegislator legislator = new GTLegislator(lid, lastname, firstname, 
+            GTLegislator legislator = new GTLegislator(lid, lastname, firstname,
                     middlename, party, state, district);
             legislator.setType(type);
             legislator.addProperty(GTLegislator.ICPSRID, icpsrid);
@@ -638,14 +639,14 @@ public class GTProcessor {
                 legislator.addProperty(NOMINATE_SCORE1, scoreStr1);
                 legislator.addProperty(NOMINATE_SCORE2, scoreStr2);
             }
-            legMap.put(lid, legislator);
+            this.legislators.put(lid, legislator);
         }
         reader.close();
 
         // info for debug
         int numRep = 0;
         int numSen = 0;
-        for (GTLegislator l : legMap.values()) {
+        for (GTLegislator l : this.legislators.values()) {
             if (l.getType().equals(GTLegislator.REP)) {
                 numRep++;
             } else if (l.getType().equals(GTLegislator.SEN)) {
@@ -655,11 +656,11 @@ public class GTProcessor {
             }
         }
         if (verbose) {
-            System.out.println("--- Loaded " + legMap.size() + " legislators");
+            System.out.println("--- Loaded " + this.legislators.size() + " legislators");
             System.out.println("--- --- # rep = " + numRep);
             System.out.println("--- --- # sen = " + numSen);
         }
-        return legMap;
+        return this.legislators;
     }
 
     private static double getEditDistance(String str1, String str2) {
@@ -1321,6 +1322,56 @@ public class GTProcessor {
         }
 
         return debateList;
+    }
+
+    public void loadTeaPartyAnnotations(String file) throws Exception {
+        if (verbose) {
+            System.out.println("Loading Tea Party annotation from " + file);
+        }
+
+        if (this.legislators == null) {
+            throw new RuntimeException("Legislator list is null");
+        }
+
+        HashMap<String, GTLegislator> icpsrIDMap = new HashMap<String, GTLegislator>();
+        for (GTLegislator legislator : this.legislators.values()) {
+            String icpsrId = legislator.getProperty(GTLegislator.ICPSRID);
+            if (icpsrId == null) {
+                continue;
+            }
+            icpsrIDMap.put(icpsrId, legislator);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(file);
+        String line;
+        String[] sline;
+        reader.readLine(); // header
+        int count = 0;
+        while ((line = reader.readLine()) != null) {
+            sline = line.split("\t");
+            if (sline.length == 0) {
+                break;
+            }
+
+            String icpsrId = sline[0];
+            String freshmen = sline[6];
+            String tpScore = sline[11];
+            String fwScore = sline[14];
+
+            GTLegislator legislator = icpsrIDMap.get(icpsrId);
+            if (legislator == null) {
+                continue;
+            }
+
+            legislator.addProperty(GTLegislator.FRESHMEN, freshmen);
+            legislator.addProperty(GTLegislator.TP_SCORE, tpScore);
+            legislator.addProperty(GTLegislator.FW_SCORE, fwScore);
+            count++;
+        }
+        reader.close();
+        if (verbose) {
+            System.out.println("--- Load Tea Party annotations. " + count);
+        }
     }
 
     public void debug() throws Exception {
