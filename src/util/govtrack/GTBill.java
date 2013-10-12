@@ -8,6 +8,8 @@ import java.util.ArrayList;
  * @author vietan
  */
 public class GTBill extends AbstractObject {
+    public static final String MAJOR_TOPIC = "major";
+    public static final String MINOR_TOPIC = "minor";
 
     private final String type;
     private final int number;

@@ -1,5 +1,6 @@
 package main;
 
+import core.AbstractRunner;
 import java.io.File;
 import java.net.URL;
 import org.apache.commons.cli.BasicParser;
@@ -16,12 +17,8 @@ import util.govtrack.GTDownloader;
  *
  * @author vietan
  */
-public class Downloader {
-
-    private static CommandLineParser parser;
-    private static Options options;
-    private static CommandLine cmd;
-
+public class Downloader extends AbstractRunner {
+    
     public static void main(String[] args) {
         try {
             // create the command line parser
@@ -29,18 +26,9 @@ public class Downloader {
 
             // create the Options
             options = new Options();
-
-            options.addOption(OptionBuilder.withLongOpt("folder")
-                    .withDescription("Folder to store downloaded data")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("congress")
-                    .withDescription("Congress number")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
+            
+            addOption("folder", "Folder to store downloaded data");
+            addOption("congress", "Congress number");
 
             options.addOption("help", false, "Help");
 

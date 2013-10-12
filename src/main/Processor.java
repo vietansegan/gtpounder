@@ -1,13 +1,11 @@
 package main;
 
+import core.AbstractRunner;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import util.CLIUtils;
 import util.IOUtils;
@@ -22,17 +20,13 @@ import util.govtrack.GTTurn;
  *
  * @author vietan
  */
-public class Processor {
+public class Processor extends AbstractRunner {
 
     public static final String SENATOR_FILE = "s01112nw.txt";
     public static final String REPRESENTATIVE_FILE = "h01112nw.txt";
     public static final String NOMINATE_SCORE_FILE = "HANDSL01112D20_BSSE.txt";
     public static final String POLICY_AGENDA_CODEBOOK_FILE = "policy_agenda_codebook.txt";
-    public static final String CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE = "bills93-111.csv";
-    private static CommandLineParser parser;
-    private static Options options;
-    private static CommandLine cmd;
-    private static boolean verbose;
+    public static final String CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE = "bills93-112-Sept232013.txt";
     public static final String DEBATE_FOLDER = "debates"; // each turn as a document
     public static final String BILL_FOLDER = "bills"; // each bill summary as a document
 
@@ -44,47 +38,13 @@ public class Processor {
             // create the Options
             options = new Options();
 
-            options.addOption(OptionBuilder.withLongOpt("folder")
-                    .withDescription("Folder to store downloaded data")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("congress")
-                    .withDescription("Congress number")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("processed-folder")
-                    .withDescription("Processed folder")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("addinfo-folder")
-                    .withDescription("Folder containing additional files")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("format-folder")
-                    .withDescription("Format folder")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("tea-party-file")
-                    .withDescription("Tea party annotation file")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
-
-            options.addOption(OptionBuilder.withLongOpt("mode")
-                    .withDescription("Mode of processing")
-                    .hasArg()
-                    .withArgName("")
-                    .create());
+            addOption("folder", "Folder to store downloaded data");
+            addOption("congress", "Congress number");
+            addOption("processed-folder", "Processed folder");
+            addOption("addinfo-folder", "Folder containing additional files");
+            addOption("format-folder", "Format folder");
+            addOption("tea-party-file", "Tea party annotation file");
+            addOption("mode", "Mode of processing");
 
             options.addOption("help", false, "Help");
             options.addOption("v", false, "Verbose");
@@ -172,6 +132,7 @@ public class Processor {
         IOUtils.createFolder(billFolder);
         proc.outputBills(new File(billFolder, "info.txt"));
         proc.outputBillSubjects(new File(billFolder, "subjects.txt"));
+        proc.outputBillTopics(new File(billFolder, "topics.txt"));
         proc.outputBillSummaries(new File(billFolder, "summaries"));
     }
 
@@ -299,6 +260,7 @@ public class Processor {
         File billFolder = new File(processedFolder, BILL_FOLDER);
         HashMap<String, GTBill> bills = proc.inputBills(new File(billFolder, "info.txt"));
         proc.inputBillSubjects(new File(billFolder, "subjects.txt"), bills);
+        proc.inputBillTopics(new File(billFolder, "topics.txt"), bills);
         proc.inputBillSummaries(new File(billFolder, "summaries"), bills);
 
         // output
@@ -327,13 +289,27 @@ public class Processor {
         }
 
         // output bill subjects
-        writer = IOUtils.getBufferedWriter(new File(outputFolder, "labels.txt"));
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "subjects.txt"));
         for (String billId : bills.keySet()) {
             GTBill bill = bills.get(billId);
             writer.write(bill.getId());
             ArrayList<String> billSubjects = bill.getSubjects();
             for (String bs : billSubjects) {
                 writer.write("\t" + bs);
+            }
+            writer.write("\n");
+        }
+        writer.close();
+
+        // output bill major topics (from the Policy Agenda Codebook)
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "topics.txt"));
+        for (String billId : bills.keySet()) {
+            GTBill bill = bills.get(billId);
+            writer.write(bill.getId());
+
+            String major = bill.getProperty(GTBill.MAJOR_TOPIC);
+            if (major != null && !major.equals("null") && !major.equals("99")) {
+                writer.write("\t" + bill.getProperty(GTBill.MAJOR_TOPIC));
             }
             writer.write("\n");
         }
@@ -402,10 +378,15 @@ public class Processor {
         File debateFolder = new File(processedFolder, DEBATE_FOLDER);
         ArrayList<GTDebate> debates = proc.inputDebates(debateFolder);
 
+        File billFolder = new File(processedFolder, BILL_FOLDER);
+        HashMap<String, GTBill> bills = proc.inputBills(new File(billFolder, "info.txt"));
+        proc.inputBillTopics(new File(billFolder, "topics.txt"), bills);
+
         // output
         ArrayList<String> docIds = new ArrayList<String>();
         ArrayList<String> docTexts = new ArrayList<String>();
         ArrayList<Double> docResponses = new ArrayList<Double>();
+        ArrayList<String> docPATopics = new ArrayList<String>();
         ArrayList<String> docInfo = new ArrayList<String>();
         for (GTDebate debate : debates) {
             int turnCount = -1;
@@ -438,6 +419,14 @@ public class Processor {
                 docIds.add(id);
                 docTexts.add(text);
                 docResponses.add(response);
+
+                // policy agenda topics from congressional bill project
+                GTBill bill = bills.get(roll.getBillId());
+                String major = null;
+                if (bill != null) {
+                    major = bill.getProperty(GTBill.MAJOR_TOPIC);
+                }
+                docPATopics.add(major);
 
                 docInfo.add(debate.getId() + "_" + turnCount + "\t"
                         + speaker + "\t"
@@ -479,6 +468,17 @@ public class Processor {
         writer = IOUtils.getBufferedWriter(new File(outputFolder, "info.txt"));
         for (int ii = 0; ii < docIds.size(); ii++) {
             writer.write(docIds.get(ii) + "\t" + docInfo.get(ii) + "\n");
+        }
+        writer.close();
+
+        // 4. output major topics from congressional bill project
+        writer = IOUtils.getBufferedWriter(new File(outputFolder, "topics.txt"));
+        for (int ii = 0; ii < docPATopics.size(); ii++) {
+            if (docPATopics.get(ii) != null) {
+                writer.write(docIds.get(ii) + "\t" + docPATopics.get(ii) + "\n");
+            } else {
+                writer.write(docIds.get(ii) + "\n");
+            }
         }
         writer.close();
     }

@@ -112,11 +112,16 @@ public class GTProcessor {
 
         BufferedReader reader = IOUtils.getBufferedReader(filepath);
         String line;
-        reader.readLine();
+        reader.readLine(); // headers
 
         int numBillsLabeled = 0;
         while ((line = reader.readLine()) != null) {
-            String[] sline = line.split("\\|");
+            String[] sline = line.split("\t");
+            if (sline[7] == null || sline[7].trim().isEmpty()) {
+                System.out.println("Skipping line " + line);
+                continue;
+            }
+
             int congressNo = Integer.parseInt(sline[7]);
             if (congressNo != this.congressNumber) {
                 continue;
@@ -136,8 +141,8 @@ public class GTProcessor {
 
             GTBill bill = this.bills.get(billId);
             if (bill != null) {
-                bill.addProperty("major", Integer.toString(major));
-                bill.addProperty("minor", Integer.toString(minor));
+                bill.addProperty(GTBill.MAJOR_TOPIC, Integer.toString(major));
+                bill.addProperty(GTBill.MINOR_TOPIC, Integer.toString(minor));
                 numBillsLabeled++;
             }
         }
@@ -524,6 +529,60 @@ public class GTProcessor {
         reader.close();
     }
 
+    public void outputBillTopics(File file) throws Exception {
+        if (verbose) {
+            System.out.println("\nOutputing bill topics from the Congressional"
+                    + " Bill Project " + file);
+        }
+
+        BufferedWriter writer = IOUtils.getBufferedWriter(file);
+        for (GTBill bill : this.bills.values()) {
+            String majorTopicId = bill.getProperty(GTBill.MAJOR_TOPIC);
+            String minorTopicId = bill.getProperty(GTBill.MINOR_TOPIC);
+
+            String majorTopic = null;
+            String minorTopic = null;
+            if (majorTopicId != null) {
+                majorTopic = policyAgendaCodebook.get(Integer.parseInt(majorTopicId));
+            }
+            if (minorTopicId != null) {
+                minorTopic = policyAgendaCodebook.get(Integer.parseInt(minorTopicId));
+            }
+
+            writer.write(bill.getId()
+                    + "\t" + majorTopicId
+                    + "\t" + minorTopicId
+                    + "\t" + majorTopic
+                    + "\t" + minorTopic
+                    + "\n");
+        }
+        writer.close();
+    }
+
+    public void inputBillTopics(File file, HashMap<String, GTBill> billMap) throws Exception {
+        if (verbose) {
+            System.out.println("\tInputing bill topics from " + file);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(file);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] sline = line.split("\t");
+            String billId = sline[0];
+            GTBill bill = billMap.get(billId);
+            if (bill == null) {
+                throw new RuntimeException("Bill " + billId + " not found");
+            }
+            String majorTopic = sline[3];
+            if (majorTopic.equals("null")) {
+                continue;
+            }
+            bill.addProperty(GTBill.MAJOR_TOPIC, sline[3]);
+            bill.addProperty(GTBill.MINOR_TOPIC, sline[4]);
+        }
+        reader.close();
+    }
+
     public void outputBills(File file) throws Exception {
         if (verbose) {
             System.out.println("\nOutputing bills " + file);
@@ -534,8 +593,8 @@ public class GTProcessor {
             GTBill bill = this.bills.get(billId);
             writer.write(bill.getType()
                     + "\t" + bill.getNumber()
-                    + "\t" + bill.getProperty("major")
-                    + "\t" + bill.getProperty("minor")
+                    + "\t" + bill.getProperty(GTBill.MAJOR_TOPIC)
+                    + "\t" + bill.getProperty(GTBill.MINOR_TOPIC)
                     + "\t" + bill.getTitle()
                     + "\t" + bill.getOfficialTitle()
                     + "\n");
@@ -558,10 +617,10 @@ public class GTProcessor {
             int number = Integer.parseInt(sline[1]);
             GTBill bill = new GTBill(type, number);
             if (!sline[2].equals("null")) {
-                bill.addProperty("major", sline[2]);
+                bill.addProperty(GTBill.MAJOR_TOPIC, sline[2]);
             }
             if (!sline[3].equals("null")) {
-                bill.addProperty("minor", sline[3]);
+                bill.addProperty(GTBill.MINOR_TOPIC, sline[3]);
             }
             String title = sline[4];
             String officialTitle = sline[5];
@@ -1088,7 +1147,8 @@ public class GTProcessor {
             if (bill == null) {
                 continue;
             }
-//            if (bill.getProperty("major") == null) { // skip bills that have no topic label from the Congressional bill project
+//            skip bills that have no topic label from the Congressional bill project
+//            if (bill.getProperty("major") == null) { 
 //                continue;
 //            }
             if (bill.getRollIds() == null) { // skip debate that has no roll-call vote
