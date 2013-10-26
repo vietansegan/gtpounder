@@ -107,4 +107,8 @@ public class GTDebate extends AbstractObject {
     public ArrayList<GTTurn> getTurns() {
         return this.turns;
     }
+
+    public GTTurn getTurn(int idx) {
+        return this.turns.get(idx);
+    }
 }

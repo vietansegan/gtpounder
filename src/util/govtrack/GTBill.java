@@ -15,6 +15,7 @@ public class GTBill extends AbstractObject {
     private final int number;
     private String title;
     private String summary;
+    private String text;
     private String officialTitle;
     private ArrayList<String> debateIds;
     private ArrayList<String> rollIds;
@@ -25,6 +26,14 @@ public class GTBill extends AbstractObject {
         this.type = type;
         this.number = number;
         this.subjects = new ArrayList<String>();
+    }
+    
+    public void setText(String text) {
+        this.text = text;
+    }
+    
+    public String getText() {
+        return this.text;
     }
 
     public void addSubject(String s) {

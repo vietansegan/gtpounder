@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package util.govtrack;
 
 import java.io.BufferedReader;
@@ -20,8 +16,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import util.IOUtils;
+import util.MiscUtils;
 
 /**
+ * This processing pipeline follows Thomas et. al. (EMNLP 06). Here are some
+ * main points:
+ *
+ * - Each debate is associated with only 1 bill. In case multiple bills are
+ * mentioned in a debate, the bill that is mentioned the most is kept.
+ *
+ * - Only bills that are have Yea/Nay ratio between [0.2, 0.8] are kept.
  *
  * @author vietan
  */
@@ -36,18 +40,18 @@ public class GTProcessor {
     public static final int LASTNAME = 0;
     public static final int FIRSTNAME = 1;
     public static final int MIDDLENAME = 2;
-    private String folder;
-    private int congressNumber;
-    private HashMap<String, GTDebate> debates;
-    private HashMap<String, GTBill> bills;
-    private HashMap<String, GTRoll> rolls;
-    private HashMap<String, GTLegislator> legislators;
-    private HashMap<String, GTLegislator> icpsrLegislatorMap;
+    protected String folder;
+    protected int congressNumber;
+    protected HashMap<String, GTDebate> debates;
+    protected HashMap<String, GTBill> bills;
+    protected HashMap<String, GTRoll> rolls;
+    protected HashMap<String, GTLegislator> legislators;
+    protected HashMap<String, GTLegislator> icpsrLegislatorMap;
     public static HashMap<String, GTState> states;
     public static HashMap<Integer, String> stateCodeMap;
     public static HashMap<Integer, String> policyAgendaCodebook;
-    private File congressFolder;
-    private boolean verbose = true;
+    protected File congressFolder;
+    protected boolean verbose = true;
 
     public GTProcessor(String folder, int congNum) {
         this.folder = folder;
@@ -67,6 +71,10 @@ public class GTProcessor {
 
     public void setVerbose(boolean v) {
         this.verbose = v;
+    }
+
+    public HashMap<String, GTBill> getBills() {
+        return this.bills;
     }
 
     private static void getStates() {
@@ -345,7 +353,9 @@ public class GTProcessor {
                     double firstnameDist = getEditDistance(legFirstname, curFirstname);
                     double firstNicknameDist = 1.0;
                     if (legislator.hasProperty("nickname")) {
-                        firstNicknameDist = getEditDistance(legislator.getProperty("nickname").toLowerCase(), curFirstname);
+                        firstNicknameDist = getEditDistance(
+                                legislator.getProperty("nickname").toLowerCase(),
+                                curFirstname);
                     }
 
                     if (lastnameDist > 0.3 && (firstnameDist > 0.3 && firstNicknameDist > 0.3)) {
@@ -371,13 +381,15 @@ public class GTProcessor {
             }
             reader.close();
             if (verbose) {
-                System.out.println("--- Number of Representatives in " + repFilepath + " don't match: " + count);
+                System.out.println("--- Number of Representatives in "
+                        + repFilepath + " don't match: " + count);
             }
         }
 
         // For Senators
         if (verbose) {
-            System.out.println("--- Filling missing ICPSR IDs for Senators in file " + senFilepath);
+            System.out.println("--- Filling missing ICPSR IDs for Senators in file "
+                    + senFilepath);
         }
         count = 0;
         File senFile = new File(senFilepath);
@@ -427,7 +439,9 @@ public class GTProcessor {
                     double firstnameDist = getEditDistance(legFirstname, curFirstname);
                     double firstNicknameDist = 1.0;
                     if (legislator.hasProperty("nickname")) {
-                        firstNicknameDist = getEditDistance(legislator.getProperty("nickname").toLowerCase(), curFirstname);
+                        firstNicknameDist = getEditDistance(
+                                legislator.getProperty("nickname").toLowerCase(),
+                                curFirstname);
                     }
 
                     if (lastnameDist > 0.3 && (firstnameDist > 0.3 && firstNicknameDist > 0.3)) {
@@ -453,7 +467,8 @@ public class GTProcessor {
             }
             reader.close();
             if (verbose) {
-                System.out.println("--- Number of Senators in " + senFilepath + " don't match: " + count);
+                System.out.println("--- Number of Senators in "
+                        + senFilepath + " don't match: " + count);
             }
         }
 
@@ -477,7 +492,8 @@ public class GTProcessor {
         }
     }
 
-    public void inputBillSummaries(File folder, HashMap<String, GTBill> billMap) throws Exception {
+    public void inputBillSummaries(File folder, HashMap<String, GTBill> billMap)
+            throws Exception {
         if (verbose) {
             System.out.println("\nInputing bill summaries " + folder);
         }
@@ -498,7 +514,7 @@ public class GTProcessor {
 
     public void outputBillSubjects(File file) throws Exception {
         if (verbose) {
-            System.out.println("\nOutputing bill subjects " + file);
+            System.out.println("Outputing bill subjects " + file);
         }
 
         BufferedWriter writer = IOUtils.getBufferedWriter(file);
@@ -512,7 +528,8 @@ public class GTProcessor {
         writer.close();
     }
 
-    public void inputBillSubjects(File file, HashMap<String, GTBill> billMap) throws Exception {
+    public void inputBillSubjects(File file, HashMap<String, GTBill> billMap)
+            throws Exception {
         if (verbose) {
             System.out.println("\nInputing bill subjects " + file);
         }
@@ -559,7 +576,8 @@ public class GTProcessor {
         writer.close();
     }
 
-    public void inputBillTopics(File file, HashMap<String, GTBill> billMap) throws Exception {
+    public void inputBillTopics(File file, HashMap<String, GTBill> billMap)
+            throws Exception {
         if (verbose) {
             System.out.println("\tInputing bill topics from " + file);
         }
@@ -668,7 +686,8 @@ public class GTProcessor {
         writer.close();
     }
 
-    public HashMap<String, GTLegislator> inputLegislators(String inputFilepath) throws Exception {
+    public HashMap<String, GTLegislator> inputLegislators(String inputFilepath)
+            throws Exception {
         if (verbose) {
             System.out.println("\nInputing legislators from file " + inputFilepath);
         }
@@ -756,7 +775,7 @@ public class GTProcessor {
     }
 
     /**
-     * Process raw debate data files downloaded from govtrack.
+     * Process raw debate data files downloaded from GovTrack.
      */
     public void processDebates() {
         File crFolder = new File(this.congressFolder, "cr");
@@ -772,7 +791,6 @@ public class GTProcessor {
 
         NodeList nodelist;
         Element el;
-
         int count = 0;
         for (String filename : debateFilenames) {
             if (count % 100 == 0 && verbose) {
@@ -858,6 +876,33 @@ public class GTProcessor {
         if (verbose) {
             System.out.println("--- Loaded " + debates.size() + " debates");
         }
+
+        // debug
+//        HashMap<Integer, ArrayList<GTDebate>> debateBillMentionCount =
+//                new HashMap<Integer, ArrayList<GTDebate>>();
+//        for (GTDebate debate : this.debates.values()) {
+//            int numBillsMentioned = debate.getBillsMentioned().size();
+//            ArrayList<GTDebate> ds = debateBillMentionCount.get(numBillsMentioned);
+//            if (ds == null) {
+//                ds = new ArrayList<GTDebate>();
+//            }
+//            ds.add(debate);
+//            debateBillMentionCount.put(numBillsMentioned, ds);
+//        }
+//        int maxCount = -1;
+//        for (int ii : debateBillMentionCount.keySet()) {
+//            int c = debateBillMentionCount.get(ii).size();
+//            System.out.println(ii + "\t" + c);
+//            if (maxCount < ii) {
+//                maxCount = ii;
+//            }
+//        }
+//
+//        System.out.println("maxC = " + maxCount);
+//        ArrayList<GTDebate> maxDs = debateBillMentionCount.get(maxCount);
+//        for (GTDebate maxD : maxDs) {
+//            System.out.println(maxD.toString());
+//        }
     }
 
     public void processBills() {
@@ -956,7 +1001,7 @@ public class GTProcessor {
     }
 
     /**
-     * Process raw roll files downloaded from govtrack
+     * Process raw roll files downloaded from GovTrack
      */
     public void processRolls() {
         File rollFolder = new File(this.congressFolder, "rolls");
@@ -973,8 +1018,9 @@ public class GTProcessor {
         this.rolls = new HashMap<String, GTRoll>();
         String[] rollFilenames = rollFolder.list();
         int count = 0;
+        int stepSize = MiscUtils.getRoundStepSize(rollFilenames.length, 10);
         for (String rollFilename : rollFilenames) {
-            if (count % 100 == 0 && verbose) {
+            if (count % stepSize == 0 && verbose) {
                 System.out.println("--- Processing roll file "
                         + count + " / " + rollFilenames.length);
             }
@@ -1063,17 +1109,27 @@ public class GTProcessor {
 
     /**
      * Get the main vote associated with a given bill. This vote is selected as
-     * follow 1. If the bill contains a vote having result as "Bill Passed",
-     * select it 2. If there is no "Bill Passed" vote, consider votes with
-     * category "passage" 2a. If the bill contains no "passage" vote, discard it
-     * 2b. If the bill contains only one "passage" vote, select the vote 2c. If
-     * the bill contains more than one "passage" votes 2c1. Among these
-     * "passage" votes, if a vote starts with "On Passage" select it 2c2.
-     * Otherwise, select none and return null
+     * follow
+     *
+     * 1. If the bill contains a vote having result as "Bill Passed", select it
+     *
+     * 2. If there is no "Bill Passed" vote, consider votes with category
+     * "passage"
+     *
+     * 2a. If the bill contains no "passage" vote, discard it
+     *
+     * 2b. If the bill contains only one "passage" vote, select the vote
+     *
+     * 2c. If the bill contains more than one "passage" votes
+     *
+     * 2c1. Among these "passage" votes, if a vote starts with "On Passage"
+     * select it
+     *
+     * 2c2. Otherwise, select none and return null
      *
      * @param bill The given bill
      */
-    private String getMainRollId(GTBill bill) {
+    protected String getMainRollId(GTBill bill) {
         if (bill.getRollIds() == null) {
             return null;
         }
@@ -1176,7 +1232,10 @@ public class GTProcessor {
             } else if (bill.getType().startsWith("s")) {
                 scount++;
             } else {
-                System.out.println(debate.getId() + ". " + bill.getId() + ". " + bill.getType() + ". " + rollId);
+                System.out.println(debate.getId()
+                        + ". " + bill.getId()
+                        + ". " + bill.getType()
+                        + ". " + rollId);
             }
         }
 
@@ -1184,9 +1243,11 @@ public class GTProcessor {
             System.out.println("--- Done pre-selecting. Discard debates that");
             System.out.println("--- 1. have no bill associated with");
             System.out.println("--- 2. have no roll-call vote");
-            System.out.println("--- 3. have no main vote for the associated bill (since for a bill, there might be multiple votes)");
+            System.out.println("--- 3. have no main vote for the associated bill "
+                    + "(since for a bill, there might be multiple votes)");
 
-            System.out.println("--- Pre-selected " + count + " debates. In House " + hcount + ". In Senate " + scount);
+            System.out.println("--- Pre-selected " + count + " debates. "
+                    + "In House " + hcount + ". In Senate " + scount);
             System.out.println("--- Groups of debates " + groupedDebateByBill.size());
         }
 
@@ -1243,7 +1304,9 @@ public class GTProcessor {
         return selectedDebates;
     }
 
-    public void outputSelectedDebateTurns(String outputFolderpath, ArrayList<GTDebate> selectedDebates) throws Exception {
+    public void outputSelectedDebateTurns(
+            String outputFolderpath,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
         if (verbose) {
             System.out.println("\nOutputing selected debates to folder " + outputFolderpath);
         }
@@ -1484,7 +1547,9 @@ public class GTProcessor {
                     System.out.println("bill " + bill.getId() + ": " + bill.getTitle());
                     for (String rid : bill.getRollIds()) {
                         GTRoll roll = this.rolls.get(rid);
-                        System.out.println("\t" + roll.getId() + ". " + roll.getProperty("category") + ", " + roll.getTitle());
+                        System.out.println("\t" + roll.getId()
+                                + ". " + roll.getProperty("category")
+                                + ", " + roll.getTitle());
                     }
                     System.out.println();
                 }
@@ -1505,7 +1570,7 @@ public class GTProcessor {
                 + ". notfound = " + nomainIdNotFoundCount);
     }
 
-    private Element getDocumentElement(String filepath) throws Exception {
+    protected Element getDocumentElement(String filepath) throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         //Using factory get an instance of document builder
         DocumentBuilder db = dbf.newDocumentBuilder();
@@ -1514,7 +1579,7 @@ public class GTProcessor {
         Element docEle = dom.getDocumentElement(); //get the root element
         return docEle;
     }
-    private static String[] stateMaps = {
+    protected static String[] stateMaps = {
         "41 AL ALABAMA",
         "81 AK ALASKA",
         "61 AZ ARIZONA",

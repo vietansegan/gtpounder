@@ -11,6 +11,11 @@ import java.util.List;
 public class MiscUtils {
 
     protected static final NumberFormat formatter = new DecimalFormat("###.###");
+    
+    public static int getRoundStepSize(int total, int numSteps) {
+        int stepSize = (int) Math.pow(10, (int)Math.log10(total / numSteps));
+        return stepSize;
+    }
 
     public static String listToString(List<Double> list) {
         if (list.isEmpty()) {

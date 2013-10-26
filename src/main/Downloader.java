@@ -1,24 +1,25 @@
 package main;
 
 import core.AbstractRunner;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.net.URL;
 import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import util.CLIUtils;
 import util.IOUtils;
 import util.govtrack.GTDownloader;
+import util.govtrack.GTProcessor;
 
 /**
  *
  * @author vietan
  */
 public class Downloader extends AbstractRunner {
-    
+
     public static void main(String[] args) {
         try {
             // create the command line parser
@@ -26,9 +27,10 @@ public class Downloader extends AbstractRunner {
 
             // create the Options
             options = new Options();
-            
+
             addOption("folder", "Folder to store downloaded data");
             addOption("congress", "Congress number");
+            addOption("type", "Download type");
 
             options.addOption("help", false, "Help");
 
@@ -38,14 +40,50 @@ public class Downloader extends AbstractRunner {
                 return;
             }
 
-            download();
+            String type = cmd.getOptionValue("type");
 
-//            downloadExternalResources();
+            if (type.equals("all")) {
+                download();
+            } else if (type.equals("external")) {
+                downloadExternalResources();
+            } else if (type.equals("bill-text")) {
+                downloadBillTexts();
+            } else if (type.equals("bill-html")) {
+                downloadBillTextInHtmls();
+            } else {
+                throw new RuntimeException("Download type " + type + " is not supported");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private static void downloadBillTextInHtmls() throws Exception {
+        System.out.println("Start downloading bill texts ...");
+        String folder = cmd.getOptionValue("folder");
+        int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 112);
+
+        GTProcessor proc = new GTProcessor(folder, congressNo);
+        proc.processDebates();
+        proc.processBills();
+
+        GTDownloader gtDownloader = new GTDownloader(folder, congressNo);
+        gtDownloader.downloadBillHtmls(proc.getBills());
+    }
+
+    private static void downloadBillTexts() throws Exception {
+        System.out.println("Start downloading bill texts ...");
+        String folder = cmd.getOptionValue("folder");
+        int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 112);
+
+        GTProcessor proc = new GTProcessor(folder, congressNo);
+        proc.processDebates();
+        proc.processBills();
+
+        GTDownloader gtDownloader = new GTDownloader(folder, congressNo);
+        gtDownloader.downloadBillTexts(proc.getBills());
     }
 
     private static void download() throws Exception {
