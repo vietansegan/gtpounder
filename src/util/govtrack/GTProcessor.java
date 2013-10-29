@@ -276,7 +276,8 @@ public class GTProcessor {
             GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrid);
             if (legislator == null) {
                 if (verbose) {
-                    System.out.println("--- --- Skipping " + line);
+                    System.out.println("--- --- Skipping the following line since "
+                            + "no ICPSR ID is found from GovTrack\n" + line);
                 }
                 continue;
             }
@@ -1456,18 +1457,18 @@ public class GTProcessor {
             System.out.println("Loading Tea Party annotation from " + file);
         }
 
-        if (this.legislators == null) {
+        if (this.icpsrLegislatorMap == null) {
             throw new RuntimeException("Legislator list is null");
         }
 
-        HashMap<String, GTLegislator> icpsrIDMap = new HashMap<String, GTLegislator>();
-        for (GTLegislator legislator : this.legislators.values()) {
-            String icpsrId = legislator.getProperty(GTLegislator.ICPSRID);
-            if (icpsrId == null) {
-                continue;
-            }
-            icpsrIDMap.put(icpsrId, legislator);
-        }
+//        HashMap<String, GTLegislator> icpsrIDMap = new HashMap<String, GTLegislator>();
+//        for (GTLegislator legislator : this.legislators.values()) {
+//            String icpsrId = legislator.getProperty(GTLegislator.ICPSRID);
+//            if (icpsrId == null) {
+//                continue;
+//            }
+//            icpsrIDMap.put(icpsrId, legislator);
+//        }
 
         BufferedReader reader = IOUtils.getBufferedReader(file);
         String line;
@@ -1485,8 +1486,9 @@ public class GTProcessor {
             String tpScore = sline[11];
             String fwScore = sline[14];
 
-            GTLegislator legislator = icpsrIDMap.get(icpsrId);
+            GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrId);
             if (legislator == null) {
+                System.out.println("Legislator with ICPSR ID " + icpsrId + " not found");
                 continue;
             }
 

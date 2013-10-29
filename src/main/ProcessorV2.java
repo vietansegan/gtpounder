@@ -85,12 +85,6 @@ public class ProcessorV2 extends Processor {
         // - load pre-computed NOMINATE scores for legislators
         proc.getNOMINATEScores(nominateFile.getAbsolutePath());
         
-        proc.inputLegislators(
-                new File(processedFolder, "legislators.txt").getAbsolutePath());
-        // load Tea Party annotation for legislators
-        File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
-        proc.loadTeaPartyAnnotations(houseRepublicanFile.getAbsolutePath());
-        
         // load topic annotation from the Congressional Bills project
         // - load Policy Agenda codebook
         File policyAgendaCodebookFile = new File(addinfoFolder, POLICY_AGENDA_CODEBOOK_FILE);
@@ -100,6 +94,10 @@ public class ProcessorV2 extends Processor {
         // from the Policy Agenda codebook
         File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
         proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
+        
+        // load Tea Party annotation for legislators
+        File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
+        proc.loadTeaPartyAnnotations(houseRepublicanFile.getAbsolutePath());
         
         // output
         // - output legislators
