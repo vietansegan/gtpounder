@@ -52,7 +52,7 @@ public class GTProcessor {
     public static HashMap<Integer, String> policyAgendaCodebook;
     protected File congressFolder;
     protected boolean verbose = true;
-    
+
     public GTProcessor() {
         GTProcessor.getStates();
     }
@@ -75,6 +75,14 @@ public class GTProcessor {
 
     public void setVerbose(boolean v) {
         this.verbose = v;
+    }
+
+    public HashMap<String, GTLegislator> getLegislators() {
+        return this.legislators;
+    }
+
+    public HashMap<String, GTLegislator> getICPSRLegislators() {
+        return this.icpsrLegislatorMap;
     }
 
     public HashMap<String, GTBill> getBills() {
@@ -694,9 +702,10 @@ public class GTProcessor {
     public HashMap<String, GTLegislator> inputLegislators(String inputFilepath)
             throws Exception {
         if (verbose) {
-            System.out.println("\nInputing legislators from file " + inputFilepath);
+            System.out.println("\nLoading legislators from file " + inputFilepath);
         }
         this.legislators = new HashMap<String, GTLegislator>();
+        this.icpsrLegislatorMap = new HashMap<String, GTLegislator>();
         BufferedReader reader = IOUtils.getBufferedReader(inputFilepath);
         String line;
         String[] sline;
@@ -723,6 +732,7 @@ public class GTProcessor {
                 legislator.addProperty(NOMINATE_SCORE2, scoreStr2);
             }
             this.legislators.put(lid, legislator);
+            this.icpsrLegislatorMap.put(icpsrid, legislator);
         }
         reader.close();
 
@@ -1460,15 +1470,6 @@ public class GTProcessor {
         if (this.icpsrLegislatorMap == null) {
             throw new RuntimeException("Legislator list is null");
         }
-
-//        HashMap<String, GTLegislator> icpsrIDMap = new HashMap<String, GTLegislator>();
-//        for (GTLegislator legislator : this.legislators.values()) {
-//            String icpsrId = legislator.getProperty(GTLegislator.ICPSRID);
-//            if (icpsrId == null) {
-//                continue;
-//            }
-//            icpsrIDMap.put(icpsrId, legislator);
-//        }
 
         BufferedReader reader = IOUtils.getBufferedReader(file);
         String line;

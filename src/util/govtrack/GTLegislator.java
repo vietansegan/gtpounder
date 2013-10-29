@@ -15,6 +15,8 @@ public class GTLegislator extends AbstractObject {
     public static final String ICPSRID = "icpsrid";
     public static final String CONVOTEID = "convoteid";
     public static final String FRESHMEN = "freshmen";
+    public static final String NOMINATE_SCORE1 = GTProcessor.NOMINATE_SCORE1;
+    public static final String NOMINATE_SCORE2 = GTProcessor.NOMINATE_SCORE2;
     // additive Tea Party score from (1) Tea Party Caucus, (2) Freedom works
     // endorsement, (3) Tea Party Express endorsement, and (4) Sarah Palin
     // endorsement.
