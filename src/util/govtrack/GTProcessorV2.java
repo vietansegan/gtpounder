@@ -15,7 +15,7 @@ import util.MiscUtils;
  * @author vietan
  */
 public class GTProcessorV2 extends GTProcessor {
-    
+
     public GTProcessorV2() {
         super();
     }
@@ -329,6 +329,9 @@ public class GTProcessorV2 extends GTProcessor {
 
     private String inputBillText(File file) {
         StringBuilder str = new StringBuilder();
+        if (!file.exists()) {
+            return str.toString();
+        }
         try {
             BufferedReader reader = IOUtils.getBufferedReader(file);
             String line;
@@ -344,7 +347,6 @@ public class GTProcessorV2 extends GTProcessor {
             throw new RuntimeException("Exception while reading file "
                     + file);
         }
-
         return str.toString();
     }
     // =========================================================================
@@ -651,7 +653,7 @@ public class GTProcessorV2 extends GTProcessor {
         }
         reader.close();
     }
-    
+
     private void outputDebateTurnText(File debateTurnTextFolder,
             ArrayList<GTDebate> selectedDebates) throws Exception {
         if (verbose) {
