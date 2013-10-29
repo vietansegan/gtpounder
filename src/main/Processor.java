@@ -27,6 +27,8 @@ public class Processor extends AbstractRunner {
     public static final String NOMINATE_SCORE_FILE = "HANDSL01112D20_BSSE.txt";
     public static final String POLICY_AGENDA_CODEBOOK_FILE = "policy_agenda_codebook.txt";
     public static final String CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE = "bills93-112-Sept232013.txt";
+    public static final String HOUSE_REPUBLICAN_FILE = "112th-House-Republicans.txt";
+    public static final String SENATE_REPUBLICAN_FILE = "112th-Senate-Republicans.txt";
     public static final String DEBATE_FOLDER = "debates"; // each turn as a document
     public static final String BILL_FOLDER = "bills"; // each bill summary as a document
 

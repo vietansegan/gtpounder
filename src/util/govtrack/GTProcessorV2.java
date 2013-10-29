@@ -15,6 +15,10 @@ import util.MiscUtils;
  * @author vietan
  */
 public class GTProcessorV2 extends GTProcessor {
+    
+    public GTProcessorV2() {
+        super();
+    }
 
     public GTProcessorV2(String folder, int congNum) {
         super(folder, congNum);
@@ -136,7 +140,7 @@ public class GTProcessorV2 extends GTProcessor {
                 GTTurn turn = new GTTurn(
                         debateId + "_" + turnCount,
                         speaker,
-                        (text.toString()));
+                        procecessText(text.toString()));
                 turn.setBillsMentioned(paraBillsMentioned);
                 if (!topic.trim().isEmpty()) {
                     turn.addProperty("topic", topic);
@@ -199,9 +203,7 @@ public class GTProcessorV2 extends GTProcessor {
     protected String procecessText(String text) {
         return text.replaceAll("\n", " ")
                 .replace("nbsp", "")
-                .replace("&", "")
-                .replace("Madam Speaker", "")
-                .replace("Mr. Speaker", "");
+                .replace("&", "");
     }
     // === End processing debates ==============================================
 
@@ -236,7 +238,7 @@ public class GTProcessorV2 extends GTProcessor {
 
             File billFile = new File(billFolder, billFilename);
             File billTextFile = new File(billTextFolder, billFilename.replaceAll("xml", "txt"));
-            if (!billTextFile.exists()) {
+            if (!billTextFile.exists() && verbose) {
                 System.out.println("--- --- Skipping bill " + billTextFile
                         + ". No text found.");
 
@@ -349,26 +351,34 @@ public class GTProcessorV2 extends GTProcessor {
 
     @Override
     public ArrayList<GTDebate> selectDebates() throws Exception {
-        System.out.println("Selecting debates ...");
-        System.out.println("--- Total # debates: " + debates.size());
+        if (verbose) {
+            System.out.println("Selecting debates ...");
+            System.out.println("--- Total # debates: " + debates.size());
+        }
         ArrayList<GTDebate> selectedDebates = new ArrayList<GTDebate>();
         for (GTDebate debate : this.debates.values()) {
             if (debate.getNumTurns() > 1) {
                 selectedDebates.add(debate);
             }
         }
-        System.out.println("--- # selected debates: " + selectedDebates.size());
+        if (verbose) {
+            System.out.println("--- # selected debates: " + selectedDebates.size());
+        }
         return selectedDebates;
     }
 
     public ArrayList<GTBill> selectBills() throws Exception {
-        System.out.println("Selecting bills ...");
-        System.out.println("--- Total # bills: " + this.bills.size());
+        if (verbose) {
+            System.out.println("Selecting bills ...");
+            System.out.println("--- Total # bills: " + this.bills.size());
+        }
         ArrayList<GTBill> selectedBills = new ArrayList<GTBill>();
         for (GTBill bill : this.bills.values()) {
             selectedBills.add(bill);
         }
-        System.out.println("--- # selected bills: " + selectedBills.size());
+        if (verbose) {
+            System.out.println("--- # selected bills: " + selectedBills.size());
+        }
         return selectedBills;
     }
 
@@ -409,7 +419,8 @@ public class GTProcessorV2 extends GTProcessor {
         return selectedBills;
     }
 
-    public void outputBillTexts(File billFolder, ArrayList<GTBill> selectedBills) throws Exception {
+    // === bills I/O ===
+    private void outputBillTexts(File billFolder, ArrayList<GTBill> selectedBills) throws Exception {
         System.out.println("Outputing bill texts to " + billFolder);
         IOUtils.createFolder(billFolder);
 
@@ -421,41 +432,197 @@ public class GTProcessorV2 extends GTProcessor {
         }
     }
 
-    public void outputDebateTurnText(File debateTurnTextFolder, 
-            ArrayList<GTDebate> selectedDebates) throws Exception {
-        System.out.println("Outputing debate turns to " + debateTurnTextFolder);
-        IOUtils.createFolder(debateTurnTextFolder);
-
-        BufferedWriter writer;
-        for (GTDebate debate : selectedDebates) {
-            writer = IOUtils.getBufferedWriter(new File(debateTurnTextFolder, debate.getId()));
-            for (int ii = 0; ii < debate.getNumTurns(); ii++) {
-                GTTurn turn = debate.getTurn(ii);
-                writer.write(turn.getId() 
-                        + "\t" + turn.getMainBillMentioned()
-                        + "\t" + turn.getSpeakerId()
-                        + "\t" + turn.getText() + "\n");
-            }
-            writer.close();
-        }
+    public void outputSelectedBills(File billFolder, ArrayList<GTBill> selectedBills) throws Exception {
+        outputBillTexts(new File(billFolder, "texts"), selectedBills);
+        outputBillSubjects(new File(billFolder, "subjects.txt"));
     }
 
-    public void outputDebateTurnSubjects(File debateTurnSubjFile) throws Exception {
-        System.out.println("Outputing debate turn subject to " + debateTurnSubjFile);
-        BufferedWriter writer = IOUtils.getBufferedWriter(debateTurnSubjFile);
-        for (GTDebate debate : this.debates.values()) {
+    public ArrayList<GTBill> inputSelectedBills(File inputFolder) throws Exception {
+        File billTextFolder = new File(inputFolder, "texts");
+        if (!billTextFolder.exists()) {
+            throw new RuntimeException("Bill text folder not found. "
+                    + billTextFolder);
+        }
+
+        if (verbose) {
+            System.out.println("Loading bill turn texts from " + billTextFolder);
+        }
+        BufferedReader reader;
+        String line;
+        HashMap<String, GTBill> billMap = new HashMap<String, GTBill>();
+        ArrayList<GTBill> billList = new ArrayList<GTBill>();
+        String[] filenames = billTextFolder.list();
+        for (String filename : filenames) {
+            String type = filename.split("-")[0];
+            int number = Integer.parseInt(filename.split("-")[1]);
+            GTBill bill = new GTBill(type, number);
+
+            StringBuilder str = new StringBuilder();
+            reader = IOUtils.getBufferedReader(new File(billTextFolder, filename));
+            while ((line = reader.readLine()) != null) {
+                str.append(line).append(" ");
+            }
+            reader.close();
+            bill.setText(str.toString());
+            billList.add(bill);
+        }
+
+        inputBillSubjects(new File(inputFolder, "subjects.txt"), billMap);
+
+        return billList;
+    }
+
+    // === debates I/O ===
+    public void outputSelectedDebates(File debateTurnFolder, ArrayList<GTDebate> selectedDebates)
+            throws Exception {
+        outputDebateTurnText(new File(debateTurnFolder, "texts"), selectedDebates);
+        outputDebateTurnSubjects(new File(debateTurnFolder, "subjects.txt"), selectedDebates);
+        outputDebateTurnBills(new File(debateTurnFolder, "bills.txt"), selectedDebates);
+        outputDebateTurnSpeakers(new File(debateTurnFolder, "speakers.txt"), selectedDebates);
+    }
+
+    public ArrayList<GTDebate> inputSelectedDebates(File inputFolder) throws Exception {
+        File debateTextFolder = new File(inputFolder, "texts");
+        if (!debateTextFolder.exists()) {
+            throw new RuntimeException("Debate text folder not found. "
+                    + debateTextFolder);
+        }
+
+        if (verbose) {
+            System.out.println("Loading debate turn texts from " + debateTextFolder);
+        }
+        HashMap<String, GTTurn> turnMap = new HashMap<String, GTTurn>();
+        BufferedReader reader;
+        String line;
+        ArrayList<GTDebate> debateList = new ArrayList<GTDebate>();
+        String[] filenames = debateTextFolder.list();
+        for (String filename : filenames) {
+            GTDebate debate = new GTDebate(filename);
+            reader = IOUtils.getBufferedReader(new File(debateTextFolder, filename));
+            while ((line = reader.readLine()) != null) {
+                int idx = line.indexOf("\t");
+                String turnId = line.substring(0, idx);
+                String turnText = line.substring(idx + 1);
+                GTTurn turn = new GTTurn(turnId);
+                turn.setText(turnText);
+
+                debate.addTurn(turn);
+                turnMap.put(turnId, turn);
+            }
+            reader.close();
+        }
+
+        if (verbose) {
+            System.out.println("--- Loaded. # debates: " + debateList.size()
+                    + ". # turns: " + turnMap.size());
+        }
+
+        inputDebateTurnSpeakers(new File(inputFolder, "speakers.txt"), turnMap);
+        inputDebateTurnBills(new File(inputFolder, "bills.txt"), turnMap);
+        inputDebateTurnSubjects(new File(inputFolder, "subjects.txt"), turnMap);
+
+        return debateList;
+    }
+
+    private void outputDebateTurnSpeakers(File debateTurnSpeakerFile,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
+        if (verbose) {
+            System.out.println("Outputing debate turn speakers to " + debateTurnSpeakerFile);
+        }
+
+        BufferedWriter writer = IOUtils.getBufferedWriter(debateTurnSpeakerFile);
+        for (GTDebate debate : selectedDebates) {
             for (int ii = 0; ii < debate.getNumTurns(); ii++) {
                 GTTurn turn = debate.getTurn(ii);
-                String majorbill = turn.getMainBillMentioned();
-                GTBill bill = this.bills.get(majorbill);
+                writer.write(turn.getId()
+                        + "\t" + turn.getSpeakerId()
+                        + "\n");
+            }
+        }
+        writer.close();
+    }
+
+    private void inputDebateTurnSpeakers(File debateTurnSpeakerFile,
+            HashMap<String, GTTurn> turnMap) throws Exception {
+        if (verbose) {
+            System.out.println("Inputing debate turn speakers from " + debateTurnSpeakerFile);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(debateTurnSpeakerFile);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int idx = line.indexOf("\t");
+            String turnId = line.substring(0, idx);
+            String turnSpeaker = line.substring(idx + 1);
+            GTTurn turn = turnMap.get(turnId);
+            turn.setSpeakerId(turnSpeaker);
+        }
+        reader.close();
+    }
+
+    private void outputDebateTurnBills(File debateTurnBillFile,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
+        if (verbose) {
+            System.out.println("Outputing debate turn bills to " + debateTurnBillFile);
+        }
+
+        BufferedWriter writer = IOUtils.getBufferedWriter(debateTurnBillFile);
+        for (GTDebate debate : selectedDebates) {
+            for (int ii = 0; ii < debate.getNumTurns(); ii++) {
+                GTTurn turn = debate.getTurn(ii);
+                writer.write(turn.getId()
+                        + "\t" + turn.getMainBillMentioned()
+                        + "\n");
+            }
+        }
+        writer.close();
+    }
+
+    private void inputDebateTurnBills(File debateTurnBillFile,
+            HashMap<String, GTTurn> turnMap) throws Exception {
+        if (verbose) {
+            System.out.println("Inputing debate turn speakers from " + debateTurnBillFile);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(debateTurnBillFile);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int idx = line.indexOf("\t");
+            String turnId = line.substring(0, idx);
+            String turnBill = line.substring(idx + 1);
+            if (turnBill.equals("null")) {
+                turnBill = null;
+            }
+
+            GTTurn turn = turnMap.get(turnId);
+            turn.setSpeakerId(turnBill);
+        }
+        reader.close();
+    }
+
+    private void outputDebateTurnSubjects(File debateTurnSubjFile,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
+        if (verbose) {
+            System.out.println("Outputing debate turn subject to " + debateTurnSubjFile);
+        }
+        BufferedWriter writer = IOUtils.getBufferedWriter(debateTurnSubjFile);
+        for (GTDebate debate : selectedDebates) {
+            for (int ii = 0; ii < debate.getNumTurns(); ii++) {
+                GTTurn turn = debate.getTurn(ii);
+                writer.write(turn.getId());
+
+                GTBill bill = this.bills.get(turn.getMainBillMentioned());
                 if (bill == null) {
+                    writer.write("\n");
                     continue;
                 }
+
                 ArrayList<String> subjects = bill.getSubjects();
                 if (subjects == null || subjects.isEmpty()) {
+                    writer.write("\n");
                     continue;
                 }
-                writer.write(turn.getId());
+
                 for (String subject : subjects) {
                     writer.write("\t" + subject);
                 }
@@ -463,5 +630,43 @@ public class GTProcessorV2 extends GTProcessor {
             }
         }
         writer.close();
+    }
+
+    private void inputDebateTurnSubjects(File debateTurnSubjFile,
+            HashMap<String, GTTurn> turnMap) throws Exception {
+        if (verbose) {
+            System.out.println("Inputing debate turn subject from " + debateTurnSubjFile);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(debateTurnSubjFile);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] sline = line.split("\t");
+            String turnId = sline[0];
+            GTTurn turn = turnMap.get(turnId);
+
+            for (int ii = 1; ii < sline.length; ii++) {
+                turn.addSubject(sline[ii]);
+            }
+        }
+        reader.close();
+    }
+    
+    private void outputDebateTurnText(File debateTurnTextFolder,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
+        if (verbose) {
+            System.out.println("Outputing debate turns to " + debateTurnTextFolder);
+        }
+        IOUtils.createFolder(debateTurnTextFolder);
+
+        BufferedWriter writer;
+        for (GTDebate debate : selectedDebates) {
+            for (int ii = 0; ii < debate.getNumTurns(); ii++) {
+                GTTurn turn = debate.getTurn(ii);
+                writer = IOUtils.getBufferedWriter(new File(debateTurnTextFolder, turn.getId()));
+                writer.write(turn.getText() + "\n");
+                writer.close();
+            }
+        }
     }
 }

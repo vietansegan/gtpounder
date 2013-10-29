@@ -16,6 +16,7 @@ public class GTTurn extends AbstractObject {
     private String text;
     private ArrayList<String> billsMentioned;
     private String mainBillMentioned;
+    private ArrayList<String> subjects;
 
     public GTTurn(String id) {
         super(id);
@@ -25,6 +26,7 @@ public class GTTurn extends AbstractObject {
         super(id);
         this.speakerId = sid;
         this.text = t;
+        this.subjects = new ArrayList<String>();
     }
 
     public void setMainBillMentioned(String b) {
@@ -33,6 +35,14 @@ public class GTTurn extends AbstractObject {
 
     public String getMainBillMentioned() {
         return this.mainBillMentioned;
+    }
+
+    public void addSubject(String subject) {
+        this.subjects.add(subject);
+    }
+
+    public ArrayList<String> getSubjects() {
+        return this.subjects;
     }
 
     /**

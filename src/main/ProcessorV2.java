@@ -8,7 +8,6 @@ import util.CLIUtils;
 import util.IOUtils;
 import util.govtrack.GTBill;
 import util.govtrack.GTDebate;
-import util.govtrack.GTProcessor;
 import util.govtrack.GTProcessorV2;
 
 /**
@@ -68,45 +67,52 @@ public class ProcessorV2 extends Processor {
         IOUtils.createFolder(processedFolder);
 
         GTProcessorV2 proc = new GTProcessorV2(folder, congressNo);
+        proc.setVerbose(verbose);
         proc.processDebates();
         proc.processBills();
         proc.processRolls();
         proc.processLegislators();
+        
 
+        // load additional information from external sources
+        File senFile = new File(addinfoFolder, SENATOR_FILE);
+        File repFile = new File(addinfoFolder, REPRESENTATIVE_FILE);
+        File nominateFile = new File(addinfoFolder, NOMINATE_SCORE_FILE);
+
+        // - entity resolution for legislators with missing ICPSR IDs
+        proc.getMissingICPSRIDs(repFile.getAbsolutePath(), senFile.getAbsolutePath());
+
+        // - load pre-computed NOMINATE scores for legislators
+        proc.getNOMINATEScores(nominateFile.getAbsolutePath());
+        
+        proc.inputLegislators(
+                new File(processedFolder, "legislators.txt").getAbsolutePath());
+        // load Tea Party annotation for legislators
+        File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
+        proc.loadTeaPartyAnnotations(houseRepublicanFile.getAbsolutePath());
+        
+        // load topic annotation from the Congressional Bills project
+        // - load Policy Agenda codebook
+        File policyAgendaCodebookFile = new File(addinfoFolder, POLICY_AGENDA_CODEBOOK_FILE);
+        proc.loadPolicyAgendaCodebook(policyAgendaCodebookFile.getAbsolutePath());
+
+        // - load topics labeled by the Congressional Bills project using topics
+        // from the Policy Agenda codebook
+        File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
+        proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
+        
+        // output
         // - output legislators
         proc.outputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
         
         // output bills
         ArrayList<GTBill> selectedBills = proc.selectBills();
         File billFolder = new File(processedFolder, BILL_FOLDER);
-        proc.outputBillTexts(new File(billFolder, "texts"), selectedBills);
-        proc.outputBillSubjects(new File(billFolder, "subjects.txt"));
+        proc.outputSelectedBills(billFolder, selectedBills);
         
         // output debates
         ArrayList<GTDebate> selectedDebates = proc.selectDebates();
         File debateTurnFolder = new File(processedFolder, DEBATE_FOLDER);
-        proc.outputDebateTurnText(new File(debateTurnFolder, "texts"), selectedDebates);
-        proc.outputDebateTurnSubjects(new File(debateTurnFolder, "subjects.txt"));
-
-//        // load additional information from external sources
-//        File senFile = new File(addinfoFolder, SENATOR_FILE);
-//        File repFile = new File(addinfoFolder, REPRESENTATIVE_FILE);
-//        File nominateFile = new File(addinfoFolder, NOMINATE_SCORE_FILE);
-//
-//        // - entity resolution for legislators with missing ICPSR IDs
-//        proc.getMissingICPSRIDs(repFile.getAbsolutePath(), senFile.getAbsolutePath());
-//
-//        // - load pre-computed NOMINATE scores for legislators
-//        proc.getNOMINATEScores(nominateFile.getAbsolutePath());
-//
-//        // - load Policy Agenda codebook
-//        File policyAgendaCodebookFile = new File(addinfoFolder, POLICY_AGENDA_CODEBOOK_FILE);
-//        proc.loadPolicyAgendaCodebook(policyAgendaCodebookFile.getAbsolutePath());
-//
-//        // - load topics labeled by the Congressional Bills project using topics
-//        // from the Policy Agenda codebook
-//        File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
-//        proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
-
+        proc.outputSelectedDebates(debateTurnFolder, selectedDebates);
     }
 }

@@ -52,6 +52,10 @@ public class GTProcessor {
     public static HashMap<Integer, String> policyAgendaCodebook;
     protected File congressFolder;
     protected boolean verbose = true;
+    
+    public GTProcessor() {
+        GTProcessor.getStates();
+    }
 
     public GTProcessor(String folder, int congNum) {
         this.folder = folder;
