@@ -72,7 +72,6 @@ public class ProcessorV2 extends Processor {
         proc.processBills();
         proc.processRolls();
         proc.processLegislators();
-        
 
         // load additional information from external sources
         File senFile = new File(addinfoFolder, SENATOR_FILE);
