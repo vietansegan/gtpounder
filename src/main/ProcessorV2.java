@@ -16,6 +16,10 @@ import util.govtrack.GTProcessorV2;
  */
 public class ProcessorV2 extends Processor {
 
+    public static String getHelpString() {
+        return "java -cp 'dist/gtpounder.jar' main.ProcessorV2 -help";
+    }
+
     public static void main(String[] args) {
         try {
             // create the command line parser
@@ -37,7 +41,7 @@ public class ProcessorV2 extends Processor {
 
             cmd = parser.parse(options, args);
             if (cmd.hasOption("help")) {
-                CLIUtils.printHelp("java -cp 'dist/gtpounder.jar' main.BillDebateProcessor -help", options);
+                CLIUtils.printHelp(getHelpString(), options);
                 return;
             }
 
@@ -83,7 +87,7 @@ public class ProcessorV2 extends Processor {
 
         // - load pre-computed NOMINATE scores for legislators
         proc.getNOMINATEScores(nominateFile.getAbsolutePath());
-        
+
         // load topic annotation from the Congressional Bills project
         // - load Policy Agenda codebook
         File policyAgendaCodebookFile = new File(addinfoFolder, POLICY_AGENDA_CODEBOOK_FILE);
@@ -93,20 +97,20 @@ public class ProcessorV2 extends Processor {
         // from the Policy Agenda codebook
         File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
         proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
-        
+
         // load Tea Party annotation for legislators
         File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
         proc.loadTeaPartyAnnotations(houseRepublicanFile.getAbsolutePath());
-        
+
         // output
         // - output legislators
         proc.outputLegislators(new File(processedFolder, "legislators.txt").getAbsolutePath());
-        
+
         // output bills
         ArrayList<GTBill> selectedBills = proc.selectBills();
         File billFolder = new File(processedFolder, BILL_FOLDER);
         proc.outputSelectedBills(billFolder, selectedBills);
-        
+
         // output debates
         ArrayList<GTDebate> selectedDebates = proc.selectDebates();
         File debateTurnFolder = new File(processedFolder, DEBATE_FOLDER);
