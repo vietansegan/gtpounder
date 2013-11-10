@@ -374,7 +374,7 @@ public class Processor extends AbstractRunner {
                 new File(processedFolder, "legislators.txt").getAbsolutePath());
 
         // load Tea Party annotation for legislators
-        proc.loadTeaPartyAnnotations(teaPartyAnnotationFile);
+        proc.loadTeaPartyHouse(teaPartyAnnotationFile);
 
         // load debates
         File debateFolder = new File(processedFolder, DEBATE_FOLDER);

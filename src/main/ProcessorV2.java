@@ -100,7 +100,7 @@ public class ProcessorV2 extends Processor {
 
         // load Tea Party annotation for legislators
         File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
-        proc.loadTeaPartyAnnotations(houseRepublicanFile.getAbsolutePath());
+        proc.loadTeaPartyHouse(houseRepublicanFile.getAbsolutePath());
 
         // output
         // - output legislators

@@ -1462,9 +1462,57 @@ public class GTProcessor {
         return debateList;
     }
 
-    public void loadTeaPartyAnnotations(String file) throws Exception {
+    public void loadTeaPartySenate(String file) throws Exception {
         if (verbose) {
-            System.out.println("Loading Tea Party annotation from " + file);
+            System.out.println("Loading Tea Party scores in the Senate from " + file);
+        }
+
+        if (this.icpsrLegislatorMap == null) {
+            throw new RuntimeException("Legislator list is null");
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(file);
+        String line;
+        String[] sline;
+        reader.readLine();
+        int count = 0;
+        while ((line = reader.readLine()) != null) {
+            sline = line.split("\t");
+            if (sline.length == 0) {
+                break;
+            }
+            String icpsrId = sline[0];
+            if (icpsrId.isEmpty() || icpsrId == null) {
+                System.out.println("Skipping " + line);
+                continue;
+            }
+
+            String freshmen = sline[7];
+            int tpCaucus = Integer.parseInt(sline[8]);
+            int tpExpress = Integer.parseInt(sline[9]);
+            int tpScore = tpCaucus + tpExpress;
+            String fwScore = sline[12];
+
+            GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrId);
+            if (legislator == null) {
+                System.out.println("Legislator with ICPSR ID " + icpsrId + " not found");
+                continue;
+            }
+
+            legislator.addProperty(GTLegislator.FRESHMEN, freshmen);
+            legislator.addProperty(GTLegislator.TP_SCORE, Integer.toString(tpScore));
+            legislator.addProperty(GTLegislator.FW_SCORE, fwScore);
+            count++;
+        }
+        reader.close();
+        if (verbose) {
+            System.out.println("--- Load Tea Party annotations. " + count);
+        }
+    }
+
+    public void loadTeaPartyHouse(String file) throws Exception {
+        if (verbose) {
+            System.out.println("Loading Tea Party scores in the House from " + file);
         }
 
         if (this.icpsrLegislatorMap == null) {
@@ -1490,6 +1538,12 @@ public class GTProcessor {
             GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrId);
             if (legislator == null) {
                 System.out.println("Legislator with ICPSR ID " + icpsrId + " not found");
+                continue;
+            }
+
+            if (fwScore == null) {
+                System.out.println("Legislator with empty FWScore: "
+                        + icpsrId + ": " + legislator.getName());
                 continue;
             }
 
