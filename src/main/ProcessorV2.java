@@ -17,7 +17,7 @@ import util.govtrack.GTProcessorV2;
 public class ProcessorV2 extends Processor {
 
     public static String getHelpString() {
-        return "java -cp 'dist/gtpounder.jar' main.ProcessorV2 -help";
+        return "java -cp 'dist/gtpounder.jar' " + ProcessorV2.class.getName() + " -help";
     }
 
     public static void main(String[] args) {

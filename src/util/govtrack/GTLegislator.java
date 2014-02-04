@@ -26,6 +26,11 @@ public class GTLegislator extends AbstractObject {
     // the preferences of Freedom Works)
     public static final String FW_SCORE = "fw_score";
     
+    public static final String TP_Caucus = "caucus";
+    public static final String FW_Endorsement = "freedom-work";
+    public static final String TP_Express = "express";
+    public static final String SP_Endorsement = "sarah-palin";
+    
     private String lastname;
     private String firstname;
     private String middlename;

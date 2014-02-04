@@ -11,6 +11,11 @@ import util.IOUtils;
 import util.MiscUtils;
 
 /**
+ * Here are some major differences of this pre-processing pipeline compared to
+ * GTProcessor:
+ *
+ * 1. Associate each turn with a bill so that each debate can be divided into
+ * smaller segments, each talking about a bill.
  *
  * @author vietan
  */
@@ -194,7 +199,8 @@ public class GTProcessorV2 extends GTProcessor {
     }
 
     protected boolean filterOut(String paraText) {
-        if (paraText.contains("I yield")) {
+        if (paraText.contains("I yield")
+                || containBillText(paraText)) {
             return true;
         }
         return false;
@@ -202,8 +208,17 @@ public class GTProcessorV2 extends GTProcessor {
 
     protected String procecessText(String text) {
         return text.replaceAll("\n", " ")
-                .replace("nbsp", "")
+//                .replace("nbsp", "")
                 .replace("&", "");
+    }
+
+    protected boolean containBillText(String text) {
+        if (text.contains("nbsp")
+                || text.contains("<p>")
+                || text.contains("<em>")) {
+            return true;
+        }
+        return false;
     }
     // === End processing debates ==============================================
 

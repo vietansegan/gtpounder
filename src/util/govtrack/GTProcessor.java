@@ -1491,6 +1491,8 @@ public class GTProcessor {
             int tpCaucus = Integer.parseInt(sline[8]);
             int tpExpress = Integer.parseInt(sline[9]);
             double tpScore = (double)(tpCaucus + tpExpress) / 2;
+            String tp_caucus = sline[8];
+            String tp_express = sline[9];
             String fwScore = sline[12];
 
             GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrId);
@@ -1502,6 +1504,9 @@ public class GTProcessor {
             legislator.addProperty(GTLegislator.FRESHMEN, freshmen);
             legislator.addProperty(GTLegislator.TP_SCORE, Double.toString(tpScore));
             legislator.addProperty(GTLegislator.FW_SCORE, fwScore);
+            
+            legislator.addProperty(GTLegislator.TP_Caucus, tp_caucus);
+            legislator.addProperty(GTLegislator.TP_Express, tp_express);
             count++;
         }
         reader.close();
@@ -1532,6 +1537,10 @@ public class GTProcessor {
 
             String icpsrId = sline[0];
             String freshmen = sline[6];
+            String tp_caucus = sline[7];
+            String fw_endorsement = sline[8];
+            String tp_express = sline[9];
+            String sp_endorsement = sline[10];
             String fwScore = sline[14];
 
             GTLegislator legislator = this.icpsrLegislatorMap.get(icpsrId);
@@ -1552,6 +1561,11 @@ public class GTProcessor {
             legislator.addProperty(GTLegislator.FRESHMEN, freshmen);
             legislator.addProperty(GTLegislator.TP_SCORE, Double.toString(normTpScore));
             legislator.addProperty(GTLegislator.FW_SCORE, fwScore);
+            
+            legislator.addProperty(GTLegislator.TP_Caucus, tp_caucus);
+            legislator.addProperty(GTLegislator.FW_Endorsement, fw_endorsement);
+            legislator.addProperty(GTLegislator.TP_Express, tp_express);
+            legislator.addProperty(GTLegislator.SP_Endorsement, sp_endorsement);
             count++;
         }
         reader.close();
