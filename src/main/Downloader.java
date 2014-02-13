@@ -29,6 +29,8 @@ public class Downloader extends AbstractRunner {
             addOption("folder", "Folder to store downloaded data");
             addOption("congress", "Congress number");
             addOption("type", "Download type");
+            addOption("year", "Year");
+            addOption("congress-type", "Congress type: house or senate");
 
             options.addOption("help", false, "Help");
 
@@ -63,11 +65,14 @@ public class Downloader extends AbstractRunner {
         System.out.println("Start downloading FreedomWorks scores ...");
         String congressType = CLIUtils.getStringArgument(cmd, "congress-type", "house");
         int year = CLIUtils.getIntegerArgument(cmd, "year", 2012);
+        int congressNo = CLIUtils.getIntegerArgument(cmd, "congress", 112);
         String folder = cmd.getOptionValue("folder");
-
+        
+        File congressFolder = new File(folder, Integer.toString(congressNo));
+        IOUtils.createFolder(congressFolder);
         FWDownloader downloader = new FWDownloader(congressType, year);
         downloader.downloadFreedomWorksScores();
-        downloader.output(folder);
+        downloader.output(congressFolder);
     }
 
     private static void downloadBillTextInHtmls() throws Exception {
