@@ -10,7 +10,7 @@ import util.RankingItemList;
  *
  * @author vietan
  */
-public class GTDebate extends AbstractObject {
+public class GTDebate extends AbstractObject<String> {
 
     private String title;
     private ArrayList<GTTurn> turns;

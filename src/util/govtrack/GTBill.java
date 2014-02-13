@@ -7,7 +7,7 @@ import java.util.ArrayList;
  *
  * @author vietan
  */
-public class GTBill extends AbstractObject {
+public class GTBill extends AbstractObject<String> {
     public static final String MAJOR_TOPIC = "major";
     public static final String MINOR_TOPIC = "minor";
 

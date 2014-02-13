@@ -6,7 +6,7 @@ import core.AbstractObject;
  *
  * @author vietan
  */
-public class GTState extends AbstractObject {
+public class GTState extends AbstractObject<String> {
 
     private int statecode; // 2 digit ICPSR State Code
     private String statename;

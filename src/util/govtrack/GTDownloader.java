@@ -97,11 +97,6 @@ public class GTDownloader {
         return true;
     }
 
-    public static String removeHTML(String htmlString) {
-        String noHTMLString = htmlString.replaceAll("\\<.*?\\>", " ");
-        return StringEscapeUtils.unescapeHtml4(StringEscapeUtils.unescapeHtml3(noHTMLString));
-    }
-
     public void downloadBillTexts(HashMap<String, GTBill> bills) throws Exception {
         System.out.println("Downloading bill texts. # bills: " + bills.size());
         int count = 0;
@@ -138,17 +133,6 @@ public class GTDownloader {
             return false;
         }
         FileUtils.copyURLToFile(url, outFile);
-        return true;
-    }
-
-    private boolean urlExists(URL url) throws Exception {
-        HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-        huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD"); 
-        huc.connect();
-        int code = huc.getResponseCode();
-        if (code == 404) {
-            return false;
-        }
         return true;
     }
 
@@ -243,5 +227,21 @@ public class GTDownloader {
 
         System.out.println("--- " + urls.size() + " urls retrieved");
         return urls;
+    }
+    
+    public static boolean urlExists(URL url) throws Exception {
+        HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+        huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD"); 
+        huc.connect();
+        int code = huc.getResponseCode();
+        if (code == 404) {
+            return false;
+        }
+        return true;
+    }
+    
+    public static String removeHTML(String htmlString) {
+        String noHTMLString = htmlString.replaceAll("\\<.*?\\>", " ");
+        return StringEscapeUtils.unescapeHtml4(StringEscapeUtils.unescapeHtml3(noHTMLString));
     }
 }

@@ -10,7 +10,7 @@ import util.RankingItemList;
  *
  * @author vietan
  */
-public class GTTurn extends AbstractObject {
+public class GTTurn extends AbstractObject<String> {
 
     private String speakerId;
     private String text;

@@ -11,6 +11,7 @@ import util.govtrack.GTDebate;
 import util.govtrack.GTProcessorV2;
 
 /**
+ * This use GTProcessorV2 instead of GTProcessor in Processor.
  *
  * @author vietan
  */

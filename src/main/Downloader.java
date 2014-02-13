@@ -1,16 +1,14 @@
 package main;
 
 import core.AbstractRunner;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.net.URL;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import util.CLIUtils;
 import util.IOUtils;
+import util.freedomworks.FWDownloader;
 import util.govtrack.GTDownloader;
 import util.govtrack.GTProcessor;
 
@@ -40,8 +38,8 @@ public class Downloader extends AbstractRunner {
                 return;
             }
 
-            String type = cmd.getOptionValue("type");
-
+            String type = CLIUtils.getStringArgument(cmd, "type", "fw-score");
+            
             if (type.equals("all")) {
                 download();
             } else if (type.equals("external")) {
@@ -50,14 +48,26 @@ public class Downloader extends AbstractRunner {
                 downloadBillTexts();
             } else if (type.equals("bill-html")) {
                 downloadBillTextInHtmls();
+            } else if (type.equals("fw-score")) {
+                downloadFreedomWorksScores();
             } else {
                 throw new RuntimeException("Download type " + type + " is not supported");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException();
         }
+    }
+
+    private static void downloadFreedomWorksScores() throws Exception {
+        System.out.println("Start downloading FreedomWorks scores ...");
+        String congressType = CLIUtils.getStringArgument(cmd, "congress-type", "house");
+        int year = CLIUtils.getIntegerArgument(cmd, "year", 2012);
+        String folder = cmd.getOptionValue("folder");
+
+        FWDownloader downloader = new FWDownloader(congressType, year);
+        downloader.downloadFreedomWorksScores();
+        downloader.output(folder);
     }
 
     private static void downloadBillTextInHtmls() throws Exception {

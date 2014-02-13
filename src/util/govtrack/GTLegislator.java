@@ -7,7 +7,7 @@ import java.util.ArrayList;
  *
  * @author vietan
  */
-public class GTLegislator extends AbstractObject {
+public class GTLegislator extends AbstractObject<String> {
 
     public static final String REP = "rep";
     public static final String SEN = "sen";

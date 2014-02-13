@@ -7,7 +7,7 @@ import java.util.HashMap;
  *
  * @author vietan
  */
-public class GTRoll extends AbstractObject {
+public class GTRoll extends AbstractObject<String> {
 
     public static final String YEA = "+";
     public static final String NAY = "-";

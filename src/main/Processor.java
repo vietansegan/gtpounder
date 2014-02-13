@@ -32,6 +32,10 @@ public class Processor extends AbstractRunner {
     public static final String DEBATE_FOLDER = "debates"; // each turn as a document
     public static final String BILL_FOLDER = "bills"; // each bill summary as a document
 
+    public static String getHelpString() {
+        return "java -cp 'dist/gtpounder.jar' " + Processor.class.getName() + " -help";
+    }
+
     public static void main(String[] args) {
         try {
             // create the command line parser
@@ -53,7 +57,7 @@ public class Processor extends AbstractRunner {
 
             cmd = parser.parse(options, args);
             if (cmd.hasOption("help")) {
-                CLIUtils.printHelp("java -cp 'dist/gtpounder.jar' main.Processor -help", options);
+                CLIUtils.printHelp(getHelpString(), options);
                 return;
             }
 
@@ -75,7 +79,7 @@ public class Processor extends AbstractRunner {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException();
         }
     }
 
