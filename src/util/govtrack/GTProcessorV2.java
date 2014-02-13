@@ -21,6 +21,8 @@ import util.MiscUtils;
  */
 public class GTProcessorV2 extends GTProcessor {
 
+    public static final String DATETIME = "datetime";
+
     public GTProcessorV2() {
         super();
     }
@@ -95,10 +97,12 @@ public class GTProcessorV2 extends GTProcessor {
 
         String title = docEle.getAttribute("title");
         String where = docEle.getAttribute("where");
+        String datetime = docEle.getAttribute(DATETIME);
         String debateId = IOUtils.removeExtension(debateFile.getName());
         GTDebate debate = new GTDebate(debateId);
         debate.setTitle(title);
         debate.addProperty("where", where);
+        debate.addProperty(DATETIME, datetime);
 
         // list of turns
         GTTurn preTurn = null;
@@ -208,7 +212,7 @@ public class GTProcessorV2 extends GTProcessor {
 
     protected String procecessText(String text) {
         return text.replaceAll("\n", " ")
-//                .replace("nbsp", "")
+                //                .replace("nbsp", "")
                 .replace("&", "");
     }
 
@@ -496,6 +500,7 @@ public class GTProcessorV2 extends GTProcessor {
         outputDebateTurnSubjects(new File(debateTurnFolder, "subjects.txt"), selectedDebates);
         outputDebateTurnBills(new File(debateTurnFolder, "bills.txt"), selectedDebates);
         outputDebateTurnSpeakers(new File(debateTurnFolder, "speakers.txt"), selectedDebates);
+        outputDebateTurnDatetime(new File(debateTurnFolder, "datetimes.txt"), selectedDebates);
     }
 
     public ArrayList<GTDebate> inputSelectedDebates(File inputFolder) throws Exception {
@@ -537,7 +542,7 @@ public class GTProcessorV2 extends GTProcessor {
         inputDebateTurnSpeakers(new File(inputFolder, "speakers.txt"), turnMap);
         inputDebateTurnBills(new File(inputFolder, "bills.txt"), turnMap);
         inputDebateTurnSubjects(new File(inputFolder, "subjects.txt"), turnMap);
-
+        inputDebateTurnDatetime(new File(inputFolder, "datetimes.txt"), turnMap);
         return debateList;
     }
 
@@ -553,6 +558,42 @@ public class GTProcessorV2 extends GTProcessor {
                 GTTurn turn = debate.getTurn(ii);
                 writer.write(turn.getId()
                         + "\t" + turn.getSpeakerId()
+                        + "\n");
+            }
+        }
+        writer.close();
+    }
+
+    private void inputDebateTurnDatetime(File filepath,
+            HashMap<String, GTTurn> turnMap) throws Exception {
+        if (verbose) {
+            System.out.println("Inputing debate turn datetime from " + filepath);
+        }
+
+        BufferedReader reader = IOUtils.getBufferedReader(filepath);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int idx = line.indexOf("\t");
+            String turnId = line.substring(0, idx);
+            String datetime = line.substring(idx + 1);
+            GTTurn turn = turnMap.get(turnId);
+            turn.addProperty(DATETIME, datetime);
+        }
+        reader.close();
+    }
+
+    private void outputDebateTurnDatetime(File filepath,
+            ArrayList<GTDebate> selectedDebates) throws Exception {
+        if (verbose) {
+            System.out.println("Outputing debate datetime to " + filepath);
+        }
+
+        BufferedWriter writer = IOUtils.getBufferedWriter(filepath);
+        for (GTDebate debate : selectedDebates) {
+            for (int ii = 0; ii < debate.getNumTurns(); ii++) {
+                GTTurn turn = debate.getTurn(ii);
+                writer.write(turn.getId()
+                        + "\t" + debate.getProperty(DATETIME)
                         + "\n");
             }
         }
