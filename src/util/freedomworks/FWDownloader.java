@@ -1,17 +1,14 @@
 package util.freedomworks;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import util.IOUtils;
 
 /**
  *
@@ -34,21 +31,8 @@ public class FWDownloader {
     }
 
     public void output(String folder) throws Exception {
-        outputLegislator(new File(folder, year + "-" + congressType + "-speaker-scores.txt"));
-    }
-
-    public void outputLegislator(File filepath) throws Exception {
-        BufferedWriter writer = IOUtils.getBufferedWriter(filepath);
-        for (int lid : yearVotes.getLegislatorIDs()) {
-            FWLegislator legislator = yearVotes.getLegislator(lid);
-            int score = yearVotes.getLegislatorScore(lid);
-            writer.write(lid
-                    + "\t" + legislator.getProperty(FWLegislator.NAME)
-                    + "\t" + legislator.getProperty(FWLegislator.ROLE)
-                    + "\t" + score
-                    + "\n");
-        }
-        writer.close();
+        this.yearVotes.outputLegislators(new File(folder, 
+                year + "-" + congressType + "-" + FWYear.SCORE_FILE));
     }
 
     public FWYear downloadFreedomWorksScores() throws Exception {
@@ -71,7 +55,7 @@ public class FWDownloader {
         }
         in.close();
 
-        Document doc = Jsoup.parse(rawContent.toString());
+        Document doc = Jsoup.parse(rawContent.toString().replaceAll("&nbsp;", " "));
 
         // get keyvote descriptions
         getKeyBills(doc, yearVotes);
