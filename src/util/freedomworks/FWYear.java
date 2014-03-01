@@ -61,6 +61,31 @@ public class FWYear extends AbstractObject<Integer> {
         reader.close();
     }
 
+    public void inputRepublicans(File filepath) throws Exception {
+        System.out.println("Loading FreedomWorks Republicans from " + filepath);
+
+        BufferedReader reader = IOUtils.getBufferedReader(filepath);
+        String line;
+        String[] sline;
+        while ((line = reader.readLine()) != null) {
+            sline = line.split("\t");
+            int lid = Integer.parseInt(sline[0]);
+            String name = sline[1];
+            String role = sline[2];
+            if (!role.endsWith("R")) {
+                continue;
+            }
+            int score = Integer.parseInt(sline[3]);
+
+            FWLegislator legislator = new FWLegislator(lid);
+            legislator.addProperty(FWLegislator.NAME, name);
+            legislator.addProperty(FWLegislator.ROLE, role);
+            this.putLegislator(lid, legislator);
+            this.putLegislatorScore(lid, score);
+        }
+        reader.close();
+    }
+
     public void outputLegislators(File filepath) throws Exception {
         BufferedWriter writer = IOUtils.getBufferedWriter(filepath);
         for (int lid : this.getLegislatorIDs()) {

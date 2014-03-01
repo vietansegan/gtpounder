@@ -56,7 +56,7 @@ public class ProcessorV2 extends Processor {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException();
         }
     }
 
@@ -99,7 +99,7 @@ public class ProcessorV2 extends Processor {
         File congBillsProjTopicFile = new File(addinfoFolder, CONGRESSIONAL_BILL_PROJECT_TOPIC_FILE);
         proc.loadCongressinalBillsProjectTopicLabels(congBillsProjTopicFile.getAbsolutePath());
 
-        // load Tea Party annotation for legislators
+        // load Tea Party anno  tation for legislators
         File houseRepublicanFile = new File(addinfoFolder, HOUSE_REPUBLICAN_FILE);
         proc.loadTeaPartyHouse(houseRepublicanFile.getAbsolutePath());
 
