@@ -14,6 +14,7 @@ public class GTLegislator extends AbstractObject<String> {
     public static final String NAME = "name";
     public static final String ICPSRID = "icpsrid";
     public static final String CONVOTEID = "convoteid";
+    public static final String FW_ID = "FWID";
     public static final String FRESHMEN = "freshmen";
     public static final String NOMINATE_SCORE1 = GTProcessor.NOMINATE_SCORE1;
     public static final String NOMINATE_SCORE2 = GTProcessor.NOMINATE_SCORE2;
