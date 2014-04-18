@@ -9,9 +9,12 @@ import java.util.ArrayList;
  */
 public class GTLegislator extends AbstractObject<String> {
 
+    public static final int DEMOCRAT = 0;
+    public static final int REPUBLICAN = 1;
     public static final String REP = "rep";
     public static final String SEN = "sen";
     public static final String NAME = "name";
+    public static final String PARTY = "party";
     public static final String ICPSRID = "icpsrid";
     public static final String CONVOTEID = "convoteid";
     public static final String FW_ID = "FWID";
@@ -21,17 +24,17 @@ public class GTLegislator extends AbstractObject<String> {
     // additive Tea Party score from (1) Tea Party Caucus, (2) Freedom works
     // endorsement, (3) Tea Party Express endorsement, and (4) Sarah Palin
     // endorsement.
-    public static final String TP_SCORE = "tp_score"; 
+    public static final String TP_SCORE = "tp_score";
     // average of Freedom Words scores from 2011 and 2012 (score from the 
     // Freedom Works group indicating the percent of time the member voted with
     // the preferences of Freedom Works)
     public static final String FW_SCORE = "fw_score";
-    
+    public static final String PRE_SCORE = "pre-score";
+    public static final String POS_SCORE = "pos-score";
     public static final String TP_Caucus = "caucus";
     public static final String FW_Endorsement = "freedom-work";
     public static final String TP_Express = "express";
     public static final String SP_Endorsement = "sarah-palin";
-    
     private String lastname;
     private String firstname;
     private String middlename;
