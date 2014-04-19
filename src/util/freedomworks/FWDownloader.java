@@ -31,8 +31,12 @@ public class FWDownloader {
     }
 
     public void output(String folder) throws Exception {
-        this.yearVotes.outputLegislators(new File(folder, 
+        this.yearVotes.outputLegislators(new File(folder,
                 year + "-" + congressType + "-" + FWYear.SCORE_FILE));
+        this.yearVotes.outputKeyVotes(new File(folder,
+                year + "-" + congressType + "-" + FWYear.KEYVOTE_FILE));
+        this.yearVotes.outputVotes(new File(folder,
+                year + "-" + congressType + "-" + FWYear.VOTE_FILE));
     }
 
     public FWYear downloadFreedomWorksScores() throws Exception {
@@ -56,12 +60,8 @@ public class FWDownloader {
         in.close();
 
         Document doc = Jsoup.parse(rawContent.toString().replaceAll("&nbsp;", " "));
-
-        // get keyvote descriptions
-        getKeyBills(doc, yearVotes);
-
-        // get actual votes
-        getVotes(doc, yearVotes);
+        getKeyBills(doc, yearVotes); // get keyvote descriptions
+        getVotes(doc, yearVotes); // get actual votes
 
         System.out.println("# bills: " + yearVotes.getBills().size());
         System.out.println("# legislators: " + yearVotes.getLegislators().size());
@@ -136,7 +136,7 @@ public class FWDownloader {
                         FWBill bill = yearVotes.getBill(bid);
 
                         FWVote vote = new FWVote(legislator, bill, year, vt);
-                        yearVotes.addVote(vote);
+                        yearVotes.addVote(lid, vote);
                     }
                 } else if (eeClass.equals("score")) {
                     String scoreStr = ee.select("span").first().text();
