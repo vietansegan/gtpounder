@@ -20,7 +20,8 @@ public class FWYear extends AbstractObject<Integer> {
     public static final String VOTE_FILE = "votes.txt";
     public static final int NA_SCORE = -1;
     private HashMap<Integer, FWLegislator> legislators;
-    private HashMap<Integer, FWBill> bills;
+    private HashMap<Integer, FWBill> bills; // key: key vote order
+    private HashMap<Integer, FWBill> keyvotes; // key: roll-call number
     private HashMap<Integer, ArrayList<FWVote>> votes;
     private HashMap<Integer, Integer> legislatorScores;
 
@@ -30,6 +31,14 @@ public class FWYear extends AbstractObject<Integer> {
         this.bills = new HashMap<Integer, FWBill>();
         this.votes = new HashMap<Integer, ArrayList<FWVote>>();
         this.legislatorScores = new HashMap<Integer, Integer>();
+    }
+
+    public HashMap<Integer, FWBill> getKeyVotes() {
+        return this.keyvotes;
+    }
+
+    public FWBill getKeyVote(int rollcallNum) {
+        return this.keyvotes.get(rollcallNum);
     }
 
     public void inputVotes(File filepath) throws Exception {
@@ -53,7 +62,7 @@ public class FWYear extends AbstractObject<Integer> {
                 int bid = Integer.parseInt(sline[ii].split(":")[0]);
                 String vt = sline[ii].split(":")[1];
                 FWVote v = new FWVote(legislators.get(lid), bills.get(bid),
-                        this.id, FWVote.getVoteType(vt));
+                        this.id, FWVote.getVoteType(vt.toLowerCase()));
                 legVotes.add(v);
             }
             this.votes.put(lid, legVotes);
@@ -85,6 +94,7 @@ public class FWYear extends AbstractObject<Integer> {
         String line;
         reader.readLine();
         this.bills = new HashMap<Integer, FWBill>();
+        this.keyvotes = new HashMap<Integer, FWBill>();
         while ((line = reader.readLine()) != null) {
             String[] sline = line.split("\t");
 
@@ -94,8 +104,13 @@ public class FWYear extends AbstractObject<Integer> {
             bill.addProperty(FWBill.BILL, sline[2]);
             bill.addProperty(FWBill.FW_VOTE_PREFERRED, sline[3]);
             bill.addProperty(FWBill.TITLE, sline[4]);
-            bill.addProperty(FWBill.SUMMARY, sline[5]);
+            if (sline.length > 5) {
+                bill.addProperty(FWBill.SUMMARY, sline[5]);
+            } else {
+                bill.addProperty(FWBill.SUMMARY, "");
+            }
             this.bills.put(bid, bill);
+            this.keyvotes.put(Integer.parseInt(sline[1]), bill);
         }
         reader.close();
     }
