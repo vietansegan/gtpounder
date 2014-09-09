@@ -22,6 +22,7 @@ public class FWYear extends AbstractObject<Integer> {
     private HashMap<Integer, FWLegislator> legislators;
     private HashMap<Integer, FWBill> bills; // key: key vote order
     private HashMap<Integer, FWBill> keyvotes; // key: roll-call number
+    private ArrayList<Integer> keyRollCalls;
     private HashMap<Integer, ArrayList<FWVote>> votes;
     private HashMap<Integer, Integer> legislatorScores;
 
@@ -35,6 +36,10 @@ public class FWYear extends AbstractObject<Integer> {
 
     public HashMap<Integer, FWBill> getKeyVotes() {
         return this.keyvotes;
+    }
+
+    public ArrayList<Integer> getKeyRollCalls() {
+        return this.keyRollCalls;
     }
 
     public FWBill getKeyVote(int rollcallNum) {
@@ -93,12 +98,14 @@ public class FWYear extends AbstractObject<Integer> {
         BufferedReader reader = IOUtils.getBufferedReader(filepath);
         String line;
         reader.readLine();
+        this.keyRollCalls = new ArrayList<Integer>();
         this.bills = new HashMap<Integer, FWBill>();
         this.keyvotes = new HashMap<Integer, FWBill>();
         while ((line = reader.readLine()) != null) {
             String[] sline = line.split("\t");
 
             int bid = Integer.parseInt(sline[0]);
+            int rollcall = Integer.parseInt(sline[1]);
             FWBill bill = new FWBill(bid);
             bill.addProperty(FWBill.ROLL_CALL, sline[1]);
             bill.addProperty(FWBill.BILL, sline[2]);
@@ -110,7 +117,8 @@ public class FWYear extends AbstractObject<Integer> {
                 bill.addProperty(FWBill.SUMMARY, "");
             }
             this.bills.put(bid, bill);
-            this.keyvotes.put(Integer.parseInt(sline[1]), bill);
+            this.keyvotes.put(rollcall, bill);
+            this.keyRollCalls.add(rollcall);
         }
         reader.close();
     }
