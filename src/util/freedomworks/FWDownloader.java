@@ -17,8 +17,8 @@ import org.jsoup.select.Elements;
 public class FWDownloader {
 
     public static final String FREEDOMWORKS_URL = "http://congress.freedomworks.org";
-    private String congressType; // house or senate
-    private int year;
+    private final String congressType; // house or senate
+    private final int year;
     private FWYear yearVotes;
 
     public FWDownloader(String congressType, int year) {
@@ -156,9 +156,6 @@ public class FWDownloader {
         huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD"); 
         huc.connect();
         int code = huc.getResponseCode();
-        if (code == 404) {
-            return false;
-        }
-        return true;
+        return code != 404;
     }
 }

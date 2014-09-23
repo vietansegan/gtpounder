@@ -19,12 +19,12 @@ public class FWYear extends AbstractObject<Integer> {
     public static final String KEYVOTE_FILE = "keyvotes.txt";
     public static final String VOTE_FILE = "votes.txt";
     public static final int NA_SCORE = -1;
-    private HashMap<Integer, FWLegislator> legislators;
+    private final HashMap<Integer, FWLegislator> legislators;
     private HashMap<Integer, FWBill> bills; // key: key vote order
     private HashMap<Integer, FWBill> keyvotes; // key: roll-call number
     private ArrayList<Integer> keyRollCalls;
     private HashMap<Integer, ArrayList<FWVote>> votes;
-    private HashMap<Integer, Integer> legislatorScores;
+    private final HashMap<Integer, Integer> legislatorScores;
 
     public FWYear(int year) {
         super(year);

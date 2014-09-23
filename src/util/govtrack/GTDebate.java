@@ -13,8 +13,8 @@ import util.RankingItemList;
 public class GTDebate extends AbstractObject<String> {
 
     private String title;
-    private ArrayList<GTTurn> turns;
-    private ArrayList<String> billsMentioned; // list of bill IDs mentioned
+    private final ArrayList<GTTurn> turns;
+    private final ArrayList<String> billsMentioned; // list of bill IDs mentioned
     private GTRoll associatedRoll;
 
     public GTDebate(String id) {
