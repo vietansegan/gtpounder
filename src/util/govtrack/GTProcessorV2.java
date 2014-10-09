@@ -203,11 +203,8 @@ public class GTProcessorV2 extends GTProcessor {
     }
 
     protected boolean filterOut(String paraText) {
-        if (paraText.contains("I yield")
-                || containBillText(paraText)) {
-            return true;
-        }
-        return false;
+        return paraText.contains("I yield")
+                || containBillText(paraText);
     }
 
     protected String procecessText(String text) {
@@ -217,12 +214,9 @@ public class GTProcessorV2 extends GTProcessor {
     }
 
     protected boolean containBillText(String text) {
-        if (text.contains("nbsp")
+        return text.contains("nbsp")
                 || text.contains("<p>")
-                || text.contains("<em>")) {
-            return true;
-        }
-        return false;
+                || text.contains("<em>");
     }
     // === End processing debates ==============================================
 
@@ -456,6 +450,7 @@ public class GTProcessorV2 extends GTProcessor {
     public void outputSelectedBills(File billFolder, ArrayList<GTBill> selectedBills) throws Exception {
         outputBillTexts(new File(billFolder, "texts"), selectedBills);
         outputBillSubjects(new File(billFolder, "subjects.txt"));
+        outputBillTopics(new File(billFolder, "topics.txt"));
     }
 
     public ArrayList<GTBill> inputSelectedBills(File inputFolder) throws Exception {
