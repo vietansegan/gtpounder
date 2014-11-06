@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ import util.MiscUtils;
 public class GTDownloader {
 
     public static final String GOVTRACK_URL = "https://www.govtrack.us/data/us/";
-    private int congressNumber;
+    private final int congressNumber;
     private File congressFolder;
     private URL congressURL;
 
@@ -30,7 +31,7 @@ public class GTDownloader {
         try {
             this.congressFolder = new File(folder, Integer.toString(congressNumber));
             this.congressURL = new URL(new URL(GOVTRACK_URL), Integer.toString(congressNumber));
-        } catch (Exception e) {
+        } catch (MalformedURLException e) {
             e.printStackTrace();
             throw new RuntimeException("Exception while initializing GTDownloader");
         }
@@ -207,6 +208,9 @@ public class GTDownloader {
 
     /**
      * Returns all urls found from a web page
+     * @param urlStr
+     * @return 
+     * @throws java.lang.Exception
      */
     public ArrayList<String> getUrls(String urlStr) throws Exception {
         System.out.println("Getting links from " + urlStr);
@@ -234,10 +238,7 @@ public class GTDownloader {
         huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD"); 
         huc.connect();
         int code = huc.getResponseCode();
-        if (code == 404) {
-            return false;
-        }
-        return true;
+        return code != 404;
     }
     
     public static String removeHTML(String htmlString) {

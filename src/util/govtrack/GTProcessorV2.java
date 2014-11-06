@@ -3,6 +3,7 @@ package util.govtrack;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.w3c.dom.Element;
@@ -172,6 +173,7 @@ public class GTProcessorV2 extends GTProcessor {
      * Fill in the main bill mentioned for every turn in the debate. If a turn
      * does not explicitly mention a bill, the bill mentioned in the most recent
      * turn is used to associate with this turn.
+     * @param debate
      */
     public void estimateTurnMainBillMentioned(GTDebate debate) {
         String firstBillMentioned = null;
@@ -355,7 +357,7 @@ public class GTProcessorV2 extends GTProcessor {
                 str.append(line.trim()).append(" ");
             }
             reader.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Exception while reading file "
                     + file);
@@ -399,6 +401,8 @@ public class GTProcessorV2 extends GTProcessor {
 
     /**
      * Select bills by roll-call votes. Only consider bills that are voted.
+     * @return 
+     * @throws java.lang.Exception
      */
     public ArrayList<GTBill> selectBillsByVotes() throws Exception {
         System.out.println("Selecting bills by roll-call votes ...");

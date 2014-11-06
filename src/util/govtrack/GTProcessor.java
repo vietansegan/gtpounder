@@ -3,6 +3,7 @@ package util.govtrack;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -308,6 +309,7 @@ public class GTProcessor {
      *
      * @param repFilepath File containing information about Representatives
      * @param senFilepath File containing information about Senators
+     * @throws java.lang.Exception
      */
     public void getMissingICPSRIDs(String repFilepath, String senFilepath) throws Exception {
         String line;
@@ -1070,7 +1072,7 @@ public class GTProcessor {
             long timeInMillisSinceEpoch = 0L;
             try {
                 timeInMillisSinceEpoch = sdf.parse(datetime).getTime();
-            } catch (Exception e) {
+            } catch (ParseException e) {
                 System.out.println("Ill-formatted datetime.");
                 e.printStackTrace();
             }
@@ -1143,6 +1145,7 @@ public class GTProcessor {
      * 2c2. Otherwise, select none and return null
      *
      * @param bill The given bill
+     * @return 
      */
     protected String getMainRollId(GTBill bill) {
         if (bill.getRollIds() == null) {
@@ -1188,6 +1191,8 @@ public class GTProcessor {
     /**
      * Select a subset of interesting debates, following the strategy suggested
      * by Thomas et. al. (EMNLP 06).
+     * @return 
+     * @throws java.lang.Exception
      */
     public ArrayList<GTDebate> selectDebates() throws Exception {
         if (verbose) {

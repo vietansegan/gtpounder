@@ -15,6 +15,7 @@ public class GTLegislator extends AbstractObject<String> {
     public static final String SEN = "sen";
     public static final String NAME = "name";
     public static final String PARTY = "party";
+    public static final String TYPE = "type"; // rep or sen
     public static final String ICPSRID = "icpsrid";
     public static final String CONVOTEID = "convoteid";
     public static final String FW_ID = "FWID";
@@ -35,11 +36,11 @@ public class GTLegislator extends AbstractObject<String> {
     public static final String FW_Endorsement = "freedom-work";
     public static final String TP_Express = "express";
     public static final String SP_Endorsement = "sarah-palin";
-    private String lastname;
-    private String firstname;
-    private String middlename;
-    private String party;
-    private String state;
+    private final String lastname;
+    private final String firstname;
+    private final String middlename;
+    private final String party;
+    private final String state;
     private int district;
     private String type; // rep or sen
     private ArrayList<String> debateIds;
@@ -90,7 +91,9 @@ public class GTLegislator extends AbstractObject<String> {
         if (this.properties.containsKey(NAME)) {
             return this.properties.get(NAME);
         }
-        return this.firstname + " " + (this.middlename == null ? "" : (this.middlename + " ")) + this.lastname;
+        return this.firstname + " " 
+                + (this.middlename == null ? "" : (this.middlename + " ")) 
+                + this.lastname;
     }
 
     public String getLastname() {

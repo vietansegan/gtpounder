@@ -17,7 +17,7 @@ public class GTRoll extends AbstractObject<String> {
     private String title;
     private long date;
     private String billId;
-    private HashMap<String, String> votes;
+    private final HashMap<String, String> votes;
     private int numYea;
     private int numNay;
     private int numNotVoting;
